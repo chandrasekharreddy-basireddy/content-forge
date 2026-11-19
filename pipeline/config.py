@@ -110,6 +110,13 @@ CHUNK_OVERLAP = int(_num("CHUNK_OVERLAP", 150))
 EXTRACT_WINDOW = int(_num("EXTRACT_WINDOW", 6000))
 MAX_EXTRACT_CALLS = int(_num("MAX_EXTRACT_CALLS", 6))
 
+# Every number in a draft is looked up in the source, in code. A number that is
+# not there caps the critic's score at 2, whatever the model decided. Set this
+# to false only if a false positive is worse than a missed fabrication.
+GROUNDING_CHECK = os.getenv("GROUNDING_CHECK", "true").strip().lower() not in (
+    "0", "false", "no", ""
+)
+
 # The critic gives a score out of 5. At or above PASS_SCORE we accept the
 # draft. Below it, we send it back with the defects, at most MAX_REPAIRS times.
 PASS_SCORE = _num("PASS_SCORE", 4)

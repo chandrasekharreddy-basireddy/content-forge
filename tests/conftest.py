@@ -38,6 +38,9 @@ def pin_config(monkeypatch):
         "CHUNK_OVERLAP": 150,
         "TRANSLATE_CHUNK": 900,
         "MAX_UPLOAD_BYTES": 10 * 1024 * 1024,
+        # The fake model writes numbers the fixture text does not contain, so
+        # the grounding check is pinned off here and tested on its own.
+        "GROUNDING_CHECK": False,
     }.items():
         monkeypatch.setattr(config, name, value)
 

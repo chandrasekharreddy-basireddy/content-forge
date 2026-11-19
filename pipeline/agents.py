@@ -17,7 +17,7 @@ a single prompt.
 import json
 from collections.abc import Callable
 
-from . import llm, schemas
+from . import checks, config, llm, schemas
 from .prompts import build_messages
 
 # A model call: (messages, **kwargs) -> (text, usage). llm.chat matches this.
@@ -72,6 +72,14 @@ OUTPUT_RULES: dict[str, str] = {
         "source."
     ),
 }
+
+# How much source the critic sees. It must be at least what the writer saw, or
+# the critic flags real content as invented: with a 6,000-character cut on an
+# 8,462-character document, the writer's last paragraph looked fabricated and
+# the critic correctly - but wrongly - called it a hallucination. The writer's
+# context is capped at 7,000 characters, so 12,000 leaves headroom.
+SOURCE_LIMIT = 12_000
+DRAFT_LIMIT = 8_000
 
 # The plan is not a user-facing output, so its schema lives here rather than
 # in schemas.py.
@@ -264,8 +272,8 @@ def critique(
     messages = build_messages(
         "critique",
         output=output,
-        source=source[:6000],
-        draft=json.dumps(draft, ensure_ascii=False, indent=2)[:6000],
+        source=source[:SOURCE_LIMIT],
+        draft=json.dumps(draft, ensure_ascii=False, indent=2)[:DRAFT_LIMIT],
     )
 
     text, usage = call(messages, model="strong", json_schema=CRITIQUE_SCHEMA)
@@ -279,10 +287,24 @@ def critique(
         raise AgentError(f"critic returned a non-integer score: {score!r}")
 
     defects = _read_defects(result.get("defects"))
+    score = max(1, min(5, score))
+    verdict = str(result.get("verdict", "revise"))
+
+    # The critic is a model and can be talked out of its own rubric: in one
+    # measured run it found an invented figure and still scored 4. A number the
+    # source does not contain is checkable without judgement, so check it here
+    # and let it override.
+    if config.GROUNDING_CHECK:
+        unsourced = checks.grounding_defects(draft, source)
+        if unsourced:
+            defects = unsourced + defects
+            if score > 2:
+                score = 2
+            verdict = "revise"
 
     return {
-        "score": max(1, min(5, score)),
-        "verdict": str(result.get("verdict", "revise")),
+        "score": score,
+        "verdict": verdict,
         "defects": defects,
         "reason": str(result.get("reason", "")).strip(),
     }, usage

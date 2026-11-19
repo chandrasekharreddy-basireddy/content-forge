@@ -251,3 +251,23 @@ def test_structured_defects_become_readable_lines():
     assert lines[2] == "legacy string defect"
     assert _read_defects([]) == []
     assert _read_defects(None) == []
+
+
+def test_the_critic_sees_as_much_source_as_the_writer(sample_text):
+    """A short source window invents hallucinations: the tail looks fabricated."""
+    from pipeline import agents
+
+    seen = {}
+
+    def capture(messages, **kwargs):
+        seen["user"] = messages[-1]["content"]
+        return (
+            '{"score": 5, "verdict": "pass", "defects": [], "reason": "ok"}',
+            {"model": "fake", "prompt_tokens": 1, "completion_tokens": 1, "cost_inr": 0},
+        )
+
+    long_source = "Start. " + ("filler sentence. " * 600) + "THE-LAST-FACT-IS-HERE."
+    assert len(long_source) > 6000  # the old limit would have cut this off
+
+    agents.critique("summary", {"summary": "x"}, long_source, call=capture)
+    assert "THE-LAST-FACT-IS-HERE" in seen["user"]

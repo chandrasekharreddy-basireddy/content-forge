@@ -179,11 +179,13 @@ def run(
             record("translate", config.TRANSLATE_MODEL, _ms(step_started), {}, f"failed: {exc}")
 
     # --- Step 6: package ---------------------------------------------------
-    succeeded = [name for name, r in results.items() if r["status"] == "ok"]
-    failed = [name for name, r in results.items() if r["status"] != "ok"]
-    if not succeeded:
+    # Judge the run on what the user can actually use, not on the critic's
+    # opinion: a draft that shipped flagged is still a draft they can read.
+    produced = [name for name, r in results.items() if r["object"] is not None]
+    clean = [name for name, r in results.items() if r["status"] == "ok"]
+    if not produced:
         status = "failed"
-    elif failed or (translation and translation["status"] != "ok"):
+    elif len(clean) != len(results) or (translation and translation["status"] != "ok"):
         status = "partial"
     else:
         status = "ok"
@@ -244,6 +246,7 @@ def _produce(output: str, context: str, depth: str, call, record, emit) -> dict:
         ok, problems = schemas.validate(output, draft)
         if not ok:
             defects = problems
+            record(output, "schema", 0, {}, f"invalid shape: {problems[0]}")
         else:
             step_started = time.perf_counter()
             try:

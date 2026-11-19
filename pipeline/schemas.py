@@ -225,11 +225,15 @@ def validate(name: str, obj) -> tuple[bool, list[str]]:
                 options = q.get("options")
                 if not isinstance(options, list) or len(options) != 4:
                     problems.append(f"{label}.options must hold exactly 4 items")
+                elif any(not str(option).strip() for option in options):
+                    problems.append(f"{label}.options contains an empty option")
                 index = q.get("answer_index")
                 if not isinstance(index, int) or isinstance(index, bool):
                     problems.append(f"{label}.answer_index must be an integer")
                 elif isinstance(options, list) and not 0 <= index < len(options):
                     problems.append(f"{label}.answer_index is out of range")
+                if not str(q.get("explanation", "")).strip():
+                    problems.append(f"{label}.explanation is empty")
 
     elif name == "flashcards":
         cards = obj.get("cards")

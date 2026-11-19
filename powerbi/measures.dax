@@ -4,7 +4,9 @@
 //   1. In the Streamlit app, open the History tab and click "Download runs as CSV".
 //   2. In Power BI Desktop: Get Data > Text/CSV, and load that file as a table
 //      called runs.
-//   3. Home > Enter Data, paste each measure below, and give it the name above it.
+//   3. Modeling > New measure, paste one measure below into the formula bar and
+//      name it exactly as the comment above it says. (Not Home > Enter Data,
+//      which creates a table rather than a measure.)
 //   4. Build the four visuals listed at the bottom of this file.
 //
 // Power BI Desktop is Windows-only. Plan for that in week one, not week five.

@@ -56,7 +56,14 @@ def _read_pdf(data: bytes) -> str:
     except ImportError as exc:  # pragma: no cover - dependency problem
         raise IngestError("pypdf is not installed: pip install pypdf") from exc
 
-    reader = PdfReader(io.BytesIO(data))
+    try:
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as exc:  # pypdf raises a family of errors, none of them ours
+        raise IngestError(f"that file could not be read as a PDF: {exc}") from exc
+
+    if len(reader.pages) > 300:
+        raise IngestError("that PDF has more than 300 pages. Split it first.")
+
     pages = []
     for number, page in enumerate(reader.pages, start=1):
         try:
@@ -75,7 +82,23 @@ def _read_docx(data: bytes) -> str:
     except ImportError as exc:  # pragma: no cover - dependency problem
         raise IngestError("python-docx is not installed: pip install python-docx") from exc
 
-    document = docx.Document(io.BytesIO(data))
+    # A .docx is a zip, so a small upload can expand enormously. Check the
+    # decompressed size before handing the bytes to the parser.
+    try:
+        import zipfile
+
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            expanded = sum(item.file_size for item in archive.infolist())
+        if expanded > config.MAX_UPLOAD_BYTES * 5:
+            raise IngestError("that document expands to far too much text.")
+    except zipfile.BadZipFile as exc:
+        raise IngestError("that file is not a valid .docx") from exc
+
+    try:
+        document = docx.Document(io.BytesIO(data))
+    except Exception as exc:
+        raise IngestError(f"that file could not be read as a .docx: {exc}") from exc
+
     parts = [p.text for p in document.paragraphs if p.text.strip()]
     for table in document.tables:
         for row in table.rows:
@@ -108,7 +131,7 @@ def chunk_text(text: str, size: int | None = None, overlap: int | None = None) -
     The overlap matters: a fact split across a boundary still appears whole in
     at least one chunk, so the model is less likely to lose it.
     """
-    size = size or config.CHUNK_SIZE
+    size = config.CHUNK_SIZE if size is None else size
     overlap = config.CHUNK_OVERLAP if overlap is None else overlap
 
     if size <= 0:

@@ -98,6 +98,14 @@ def test_an_unknown_format_is_refused():
         raise AssertionError("expected a ValueError")
 
 
+def test_a_hostile_document_name_cannot_escape_the_output_folder():
+    """The filename becomes a path in the CLI, so it must be sanitised."""
+    _, filename, _ = exports.render("summary", SUMMARY, "md", "../../../tmp/pwn.txt")
+    assert "/" not in filename
+    assert ".." not in filename
+    assert filename.endswith("_summary.md")
+
+
 def test_a_pipe_in_a_flashcard_does_not_break_the_table():
     cards = {"cards": [{"front": "a|b", "back": "c"}]}
     text = exports.markdown("flashcards", cards)

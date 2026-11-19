@@ -10,6 +10,7 @@ pointed at either one.
 
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import requests
@@ -52,13 +53,25 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
     return connection
 
 
-def save_run(record: dict, db_path: Path | None = None, supabase: bool = True) -> bool:
-    """Save one run locally, then try Supabase. Returns True if local save worked."""
+def save_run(
+    record: dict,
+    db_path: Path | None = None,
+    supabase: bool = True,
+    keep_payload: bool = True,
+) -> bool:
+    """Save one run locally, then try Supabase. Returns True if local save worked.
+
+    keep_payload=False stores the scalar columns only. The public demo uses it:
+    the dashboard needs run counts, not the text a stranger pasted in.
+    """
     row = to_row(record)
+    if not keep_payload:
+        row["payload"] = json.dumps({"id": row["id"], "status": row["status"]})
 
     try:
-        connection = connect(db_path)
-        with connection:
+        # closing() matters: `with connection:` commits but does not close, so
+        # an error path would leak the handle and hold the write lock.
+        with closing(connect(db_path)) as connection, connection:
             connection.execute(
                 f"INSERT OR REPLACE INTO runs ({COLUMNS}) VALUES "
                 "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -79,7 +92,6 @@ def save_run(record: dict, db_path: Path | None = None, supabase: bool = True) -
                     row["payload"],
                 ),
             )
-        connection.close()
     except sqlite3.Error:
         # A broken local database is a real problem, so report it to the caller.
         return False
@@ -145,21 +157,21 @@ def to_row(record: dict) -> dict:
 
 def list_runs(limit: int = 50, db_path: Path | None = None) -> list[dict]:
     """The most recent runs, newest first, without the payload."""
-    connection = connect(db_path)
-    rows = connection.execute(
-        "SELECT id, doc_name, created_at, status, words, outputs_count, avg_score, "
-        "cost_inr, duration_ms, depth FROM runs ORDER BY created_at DESC LIMIT ?",
-        (limit,),
-    ).fetchall()
-    connection.close()
+    with closing(connect(db_path)) as connection:
+        rows = connection.execute(
+            "SELECT id, doc_name, created_at, status, words, outputs_count, avg_score, "
+            "cost_inr, duration_ms, depth FROM runs ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
     return [dict(row) for row in rows]
 
 
 def get_run(run_id: str, db_path: Path | None = None) -> dict | None:
     """One full run, payload included, or None."""
-    connection = connect(db_path)
-    row = connection.execute("SELECT payload FROM runs WHERE id = ?", (run_id,)).fetchone()
-    connection.close()
+    with closing(connect(db_path)) as connection:
+        row = connection.execute(
+            "SELECT payload FROM runs WHERE id = ?", (run_id,)
+        ).fetchone()
     if row is None:
         return None
     return json.loads(row["payload"])
@@ -167,13 +179,12 @@ def get_run(run_id: str, db_path: Path | None = None) -> dict | None:
 
 def runs_as_csv(db_path: Path | None = None) -> str:
     """Every run as CSV text, ready for Power BI's Get Data > Text/CSV."""
-    connection = connect(db_path)
-    rows = connection.execute(
-        "SELECT id, doc_name, created_at, status, words, chunks, outputs_count, "
-        "avg_score, cost_inr, tokens_in, tokens_out, duration_ms, depth "
-        "FROM runs ORDER BY created_at"
-    ).fetchall()
-    connection.close()
+    with closing(connect(db_path)) as connection:
+        rows = connection.execute(
+            "SELECT id, doc_name, created_at, status, words, chunks, outputs_count, "
+            "avg_score, cost_inr, tokens_in, tokens_out, duration_ms, depth "
+            "FROM runs ORDER BY created_at"
+        ).fetchall()
 
     headers = [
         "id",
@@ -196,7 +207,11 @@ def runs_as_csv(db_path: Path | None = None) -> str:
         for key in headers:
             value = row[key]
             text = "" if value is None else str(value)
-            if "," in text or '"' in text:
+            # A cell starting with =, +, - or @ is executed as a formula by
+            # Excel and Power BI. Prefix it so a filename cannot become code.
+            if text[:1] in ("=", "+", "-", "@", "\t", "\r"):
+                text = "'" + text
+            if "," in text or '"' in text or "\n" in text:
                 text = '"' + text.replace('"', '""') + '"'
             values.append(text)
         lines.append(",".join(values))
@@ -205,12 +220,12 @@ def runs_as_csv(db_path: Path | None = None) -> str:
 
 def stats(db_path: Path | None = None) -> dict:
     """The four numbers the landing page and the app header show."""
-    connection = connect(db_path)
-    row = connection.execute(
-        "SELECT COUNT(*) AS runs, COALESCE(SUM(outputs_count),0) AS outputs, "
-        "COALESCE(AVG(avg_score),0) AS score, COALESCE(SUM(cost_inr),0) AS cost FROM runs"
-    ).fetchone()
-    connection.close()
+    with closing(connect(db_path)) as connection:
+        row = connection.execute(
+            "SELECT COUNT(*) AS runs, COALESCE(SUM(outputs_count),0) AS outputs, "
+            "COALESCE(AVG(avg_score),0) AS score, COALESCE(SUM(cost_inr),0) AS cost "
+            "FROM runs"
+        ).fetchone()
     return {
         "runs": row["runs"],
         "outputs": row["outputs"],

@@ -19,7 +19,7 @@
 This is a solo submission: Chandra Sekhar Basireddy, 252205992. The course
 prescribes groups of three to four, so the scope below has been cut to what one
 person can build and defend — five output types instead of nine, three app
-screens, and a ten-document evaluation set rather than twenty. The single-rater
+screens, and an eleven-document evaluation set rather than twenty. The single-rater
 limitation of the human evaluation is stated openly in the report rather than
 worked around.
 
@@ -83,7 +83,7 @@ rather than decorative, and it is visible in the app behind a toggle.
   that feeds a Power BI dashboard.
 - A public landing page in HTML, CSS and JavaScript, backed by a FastAPI bridge
   with a single allowed origin and a per-IP rate limit.
-- 84 offline tests that need no API key, including the critic loop itself.
+- 118 offline tests that need no API key, including the critic loop itself.
 
 ## 5. Technology stack
 
@@ -115,7 +115,7 @@ rather than decorative, and it is visible in the app behind a toggle.
 | 9 | Streamlit app | Upload, progress, scores, downloads, history | Week 5 |
 | 10 | Web layer | Landing page, FastAPI bridge, CORS, rate limit | Week 5 |
 | 11 | Analytics | Power BI dashboard over the run log | Week 6 |
-| 12 | Evaluation | ROUGE-L and an LLM judge over a ten-document set | Week 6 |
+| 12 | Evaluation | ROUGE-L and an LLM judge over an eleven-document set | Week 6 |
 | 13 | Tests | Offline suite covering all of the above | throughout |
 
 ### What is deliberately out of scope

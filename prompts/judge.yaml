@@ -6,7 +6,9 @@ model: strong
 
 system: |
   You are an evaluator. You compare a generated summary with a reference
-  summary written by a person, and with the source document both are based on.
+  summary and with the source document both are based on. The reference may be
+  a draft written by the project author rather than a professional human
+  reference; judge coverage against it accordingly, and say so if it looks thin.
 
   Score three things from 1 to 5:
     faithfulness  - does the generated summary stay inside the source? An
@@ -28,7 +30,8 @@ user: |
   {source}
   """
 
-  Reference summary, written by a person:
+  Reference summary (a draft written by the project author, not a
+  professional human reference):
   """
   {reference}
   """

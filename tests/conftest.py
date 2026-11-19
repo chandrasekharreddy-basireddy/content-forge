@@ -16,6 +16,30 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / "evals"))  # rouge.py lives with the harness
+
+from pipeline import config  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def pin_config(monkeypatch):
+    """Pin the behaviour constants for every test.
+
+    config.py loads .env at import, so without this a developer's own settings
+    (PASS_SCORE=5, MAX_REPAIRS=5) change what the tests assert. The suite must
+    give the same answer on a fresh clone and on a configured machine.
+    """
+    for name, value in {
+        "PASS_SCORE": 4.0,
+        "MAX_REPAIRS": 2,
+        "EXTRACT_WINDOW": 6000,
+        "MAX_EXTRACT_CALLS": 6,
+        "CHUNK_SIZE": 1200,
+        "CHUNK_OVERLAP": 150,
+        "TRANSLATE_CHUNK": 900,
+        "MAX_UPLOAD_BYTES": 10 * 1024 * 1024,
+    }.items():
+        monkeypatch.setattr(config, name, value)
 
 
 @pytest.fixture

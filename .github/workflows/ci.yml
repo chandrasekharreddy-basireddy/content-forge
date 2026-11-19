@@ -22,7 +22,7 @@ jobs:
           cache: pip
 
       - name: Install
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Lint
         run: ruff check .
@@ -32,4 +32,13 @@ jobs:
         run: pytest -q
 
       - name: Pipeline smoke test on the fake model
-        run: python scripts/cli.py evals/testset/01_water_budget.txt --fake --outputs summary quiz --no-save
+        # Assert the outcome, not just the exit code: a run where every output
+        # was flagged still exits 0.
+        run: |
+          python scripts/cli.py evals/testset/01_water_budget.txt --fake \
+            --outputs summary quiz --no-save --no-write | tee smoke.txt
+          grep -q '^status: ok$' smoke.txt
+          grep -qE 'summary +5/5' smoke.txt
+
+      - name: Evaluation harness on the fake model
+        run: python evals/run_eval.py --fake --limit 2

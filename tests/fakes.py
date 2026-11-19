@@ -14,21 +14,33 @@ import json
 class FakeModel:
     """A stand-in for llm.chat with the same signature."""
 
-    def __init__(self, scores: list[int] | None = None, fail_outputs: tuple = ()):
+    def __init__(
+        self,
+        scores: list[int] | None = None,
+        fail_outputs: tuple = (),
+        mode: str = "normal",
+    ):
         """
         scores         the critic's scores, handed out in order. Default
                        [3, 5] - reject once, then accept, which is exactly
                        the behaviour the loop is meant to show.
         fail_outputs   output names whose writer should raise, to prove that
                        one bad output does not kill the run.
+        mode           "normal", "invalid_json" (the writer returns prose, so
+                       the AgentError path runs), or "schema_invalid" (the
+                       writer returns a well-formed JSON object of the wrong
+                       shape, so the validator rejects it).
         """
         self.scores = list(scores or [3, 5])
         self.fail_outputs = fail_outputs
+        self.mode = mode
         self.calls: list[dict] = []
+        self.last_user = ""
 
     def __call__(self, messages, model=None, json_schema=None, **kwargs):
         system = messages[0]["content"]
         user = messages[-1]["content"]
+        self.last_user = user
         self.calls.append({"model": model, "system": system[:60], "user": user[:120]})
 
         if "You extract evidence" in system:
@@ -78,6 +90,10 @@ class FakeModel:
             output = _output_type(user)
             if output in self.fail_outputs:
                 raise RuntimeError(f"writer exploded on {output}")
+            if self.mode == "invalid_json":
+                return "I cannot help with that.", _usage(model, 800, 20)
+            if self.mode == "schema_invalid":
+                return json.dumps({"summary": "too short to be valid"}), _usage(model, 800, 20)
             return json.dumps(_object_for(output)), _usage(model, 800, 300)
 
         return json.dumps({"note": "unrecognised prompt"}), _usage(model, 10, 5)

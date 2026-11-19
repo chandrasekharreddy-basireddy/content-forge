@@ -7,6 +7,8 @@ response and the CLI all use the same code path. Nothing here calls a model.
 import csv
 import io
 import json
+import re
+from pathlib import Path
 
 from . import schemas
 
@@ -98,11 +100,14 @@ def docx_bytes(output: str, obj: dict, doc_name: str = "") -> bytes:
         for number, q in enumerate(obj.get("questions", []), start=1):
             document.add_heading(f"Q{number}. {q.get('question', '')}", level=2)
             for index, option in enumerate(q.get("options", [])):
-                paragraph = document.add_paragraph(option, style="List Number")
-                if index == q.get("answer_index"):
+                paragraph = document.add_paragraph(str(option), style="List Number")
+                # An empty option produces a paragraph with no runs, so guard
+                # before reaching for runs[0].
+                if index == q.get("answer_index") and paragraph.runs:
                     paragraph.runs[0].bold = True
-            note = document.add_paragraph(q.get("explanation", ""))
-            note.runs[0].italic = True
+            note = document.add_paragraph(str(q.get("explanation", "")))
+            if note.runs:
+                note.runs[0].italic = True
 
     elif output == "flashcards":
         table = document.add_table(rows=1, cols=2)
@@ -128,7 +133,8 @@ def docx_bytes(output: str, obj: dict, doc_name: str = "") -> bytes:
                 document.add_paragraph(bullet, style="List Bullet")
             if slide.get("notes"):
                 note = document.add_paragraph(f"Speaker notes: {slide['notes']}")
-                note.runs[0].italic = True
+                if note.runs:
+                    note.runs[0].italic = True
 
     elif output == "translation":
         document.add_paragraph(obj.get("text", ""))
@@ -199,7 +205,9 @@ def csv_text(output: str, obj: dict) -> str:
                          "answer", "explanation"])
         for q in obj.get("questions", []):
             options = list(q.get("options", [])) + ["", "", "", ""]
-            index = q.get("answer_index", 0)
+            index = q.get("answer_index")
+            if not isinstance(index, int) or isinstance(index, bool):
+                index = -1  # a non-integer index must not reach the comparison
             answer = options[index] if 0 <= index < len(options) else ""
             writer.writerow(
                 [q.get("question", ""), *options[:4], answer, q.get("explanation", "")]
@@ -241,7 +249,11 @@ def formats_for(output: str) -> list[str]:
 
 def render(output: str, obj: dict, fmt: str, doc_name: str = "") -> tuple[bytes, str, str]:
     """Return (content, filename, mime type) for one output in one format."""
-    base = f"{doc_name.rsplit('.', 1)[0]}_{output}" if doc_name else output
+    # The filename becomes a path in the CLI, so strip anything that could
+    # climb out of the output folder or upset a filesystem.
+    stem = Path(doc_name).stem if doc_name else ""
+    base = f"{stem}_{output}" if stem else output
+    base = re.sub(r"[^A-Za-z0-9._-]", "_", base)[:80] or output
 
     if fmt == "md":
         return markdown(output, obj, doc_name).encode("utf-8"), f"{base}.md", "text/markdown"

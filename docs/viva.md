@@ -44,9 +44,9 @@ error. A failed quiz must not cost you the summary you already have.
 **6. Why no LangGraph, when the course mentions agentic workflows?**
 
 LangGraph is a reasonable choice and I started there. I dropped it because the
-workflow is a for loop and a while loop, and a hundred lines of plain Python
-that you can explain line by line is worth more in a viva than a graph library
-you have to hand-wave about. The trade-off is real: if the workflow grew
+workflow is a for loop and a while loop, and plain functions you can explain
+line by line are worth more in a viva than a graph library you have to
+hand-wave about. The trade-off is real: if the workflow grew
 branches or needed persistence between steps, a framework would earn its place.
 
 **7. Why Structured Outputs and a hand-written validator? Isn't that
@@ -75,7 +75,7 @@ per request — so `pipeline/llm.py` splits on sentence boundaries and rejoins.
 
 **10. How do you know any of this works?**
 
-Eighty-seven offline tests that need no key, including the critic loop firing
+One hundred and eighteen offline tests that need no key, including the critic loop firing
 and stopping, a failing output not killing a run, a 429 being retried while a
 400 fails fast, and the CSV export quoting commas so Power BI can read it. Plus
 an evaluation harness with ROUGE-L and an LLM judge over eleven documents, whose

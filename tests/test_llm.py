@@ -185,3 +185,77 @@ def test_empty_translation_is_not_sent(monkeypatch):
         llm.requests, "post", lambda *a, **k: FakeResponse(200, {"translated_text": "x"})
     )
     assert llm.translate("   ") == ""
+
+
+def test_a_role_name_is_resolved_to_a_real_model_id(sent):
+    """The agents ask for "fast"/"strong"; the API needs an id, not a role."""
+    llm.chat([{"role": "user", "content": "hi"}], model="fast")
+    assert sent[0]["body"]["model"] == config.MODEL_FAST
+    assert sent[0]["body"]["model"] not in ("fast", "strong")
+
+    llm.chat([{"role": "user", "content": "hi"}], model="strong")
+    assert sent[1]["body"]["model"] == config.MODEL_STRONG
+
+
+def test_a_real_model_id_passes_through_untouched(sent):
+    llm.chat([{"role": "user", "content": "hi"}], model="gemma4")
+    assert sent[0]["body"]["model"] == "gemma4"
+
+
+def test_a_network_error_is_retried_then_raised(monkeypatch):
+    """Bad wifi in a viva room is the failure this must survive."""
+    import requests
+
+    monkeypatch.setattr(llm.time, "sleep", lambda seconds: None)
+    attempts = []
+
+    def flaky(*args, **kwargs):
+        attempts.append(1)
+        raise requests.ConnectionError("dns fail")
+
+    monkeypatch.setattr(llm.requests, "post", flaky)
+    with pytest.raises(llm.LLMError) as error:
+        llm.chat([{"role": "user", "content": "hi"}], retries=2)
+    assert "network error" in str(error.value)
+    assert len(attempts) == 3  # one try plus two retries
+
+
+def test_a_reply_with_no_choices_is_an_error(monkeypatch):
+    monkeypatch.setattr(
+        llm.requests, "post", lambda *a, **k: FakeResponse(200, {"nope": 1})
+    )
+    with pytest.raises(llm.LLMError) as error:
+        llm.chat([{"role": "user", "content": "hi"}])
+    assert "unexpected reply shape" in str(error.value)
+
+
+def test_an_empty_completion_is_an_error_not_an_empty_draft(monkeypatch):
+    """finish_reason "length" is the usual cause; say so instead of shipping ""."""
+    monkeypatch.setattr(
+        llm.requests,
+        "post",
+        lambda *a, **k: FakeResponse(
+            200,
+            {
+                "model": "sarvam-105b",
+                "choices": [{"message": {"content": ""}, "finish_reason": "length"}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 4096},
+            },
+        ),
+    )
+    with pytest.raises(llm.LLMError) as error:
+        llm.chat([{"role": "user", "content": "hi"}])
+    assert "length" in str(error.value)
+
+
+def test_a_translation_400_is_not_retried(monkeypatch):
+    attempts = []
+
+    def fake_post(*args, **kwargs):
+        attempts.append(1)
+        return FakeResponse(400, {"error": "input too long"})
+
+    monkeypatch.setattr(llm.requests, "post", fake_post)
+    with pytest.raises(llm.LLMError):
+        llm.translate("hello", target_language="hi-IN")
+    assert len(attempts) == 1

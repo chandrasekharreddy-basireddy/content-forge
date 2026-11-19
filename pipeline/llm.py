@@ -59,7 +59,11 @@ def chat(
             "SARVAM_API_KEY is not set. Copy .env.example to .env and paste your key."
         )
 
-    model = model or config.MODEL_STRONG
+    # The agents ask for a role ("fast" or "strong"); the API wants a model id.
+    # Resolving it here means a role can never be posted as a model id, which
+    # the API answers with a 404.
+    model = config.MODELS.get(model or "strong", model or config.MODEL_STRONG)
+
     body: dict[str, Any] = {
         "model": model,
         "messages": messages,
@@ -92,7 +96,13 @@ def chat(
             raise LLMError(last_error) from exc
 
         if response.status_code == 200:
-            return _read_reply(response.json(), model)
+            try:
+                payload = response.json()
+            except ValueError as exc:
+                # A proxy can return HTML with a 200. Do not let that escape
+                # as a JSONDecodeError three frames up.
+                raise LLMError(f"non-JSON reply body: {response.text[:200]}") from exc
+            return _read_reply(payload, model)
 
         last_error = f"HTTP {response.status_code}: {response.text[:300]}"
 
@@ -110,9 +120,16 @@ def chat(
 def _read_reply(payload: dict, model: str) -> tuple[str, dict]:
     """Pull the text and the token counts out of an OpenAI-shaped reply."""
     try:
-        text = payload["choices"][0]["message"]["content"] or ""
+        choice = payload["choices"][0]
+        text = choice["message"]["content"] or ""
     except (KeyError, IndexError, TypeError) as exc:
         raise LLMError(f"unexpected reply shape: {str(payload)[:300]}") from exc
+
+    if not text.strip():
+        # An empty completion is a failure, not an empty draft. The usual cause
+        # is finish_reason "length", which means max_tokens was too small.
+        reason = choice.get("finish_reason", "unknown")
+        raise LLMError(f"empty completion (finish_reason={reason!r})")
 
     usage = payload.get("usage") or {}
     prompt_tokens = int(usage.get("prompt_tokens") or 0)

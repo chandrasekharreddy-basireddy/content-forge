@@ -1,0 +1,11 @@
+# Development and CI only: pip install -r requirements-dev.txt
+-r requirements.txt
+
+pytest>=8.0
+ruff>=0.4
+
+# FastAPI's TestClient needs an HTTP client of its own. Newer starlette
+# releases require httpx2; older ones use httpx. Listing both keeps CI green
+# whichever one the resolver picks.
+httpx>=0.27
+httpx2>=2.0

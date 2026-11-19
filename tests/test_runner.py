@@ -64,7 +64,15 @@ def test_repairs_stop_at_the_limit_and_the_result_is_flagged(sample_text):
     assert summary["status"] == "flagged"
     assert summary["error"]
     assert summary["object"] is not None  # we still ship the best draft
-    assert summary["rounds"] <= 2
+    # Exact, not <=: an off-by-one in the budget must fail here.
+    from pipeline import config
+
+    assert summary["rounds"] == config.MAX_REPAIRS
+    writes = [
+        row for row in record["trace"]
+        if row["step"] == "summary" and row["note"] in ("first draft", "round 1", "round 2")
+    ]
+    assert len(writes) == config.MAX_REPAIRS + 1
 
 
 def test_a_failing_output_does_not_kill_the_run(sample_text):
@@ -191,3 +199,38 @@ def test_a_long_document_does_not_lose_its_first_and_last_chunk():
     joined = " ".join(groups)
     assert "chunk-0" in joined
     assert "chunk-49" in joined
+
+
+def test_a_wrongly_shaped_draft_is_rejected_by_our_validator(sample_text):
+    """The schema check runs before the critic, and says so in the trace."""
+    from fakes import FakeModel, FakeTranslator
+
+    model = FakeModel(scores=[5, 5, 5], mode="schema_invalid")
+    record = runner.run(
+        "pilot.txt", sample_text, outputs=["summary"], call=model,
+        translate_fn=FakeTranslator(),
+    )
+    summary = record["outputs"]["summary"]
+    assert summary["status"] == "flagged"
+    assert any("invalid shape" in row["note"] for row in record["trace"])
+    # The repair must be told what was wrong, not just "try again".
+    assert "bullets" in model.last_user
+
+
+def test_prose_instead_of_json_is_a_failed_output_not_a_crash(sample_text):
+    from fakes import FakeModel, FakeTranslator
+
+    model = FakeModel(mode="invalid_json")
+    record = runner.run(
+        "pilot.txt", sample_text, outputs=["summary"], call=model,
+        translate_fn=FakeTranslator(),
+    )
+    assert record["outputs"]["summary"]["status"] == "failed"
+    assert record["status"] == "failed"
+
+
+def test_a_run_that_shipped_only_flagged_outputs_is_partial_not_failed(sample_text):
+    """A flagged draft is still usable content; calling the run failed is wrong."""
+    record, _, _ = run_once(sample_text, scores=[1] * 10, outputs=["summary"])
+    assert record["outputs"]["summary"]["status"] == "flagged"
+    assert record["status"] == "partial"

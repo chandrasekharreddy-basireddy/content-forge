@@ -48,9 +48,9 @@ pipeline from a single prompt in a text box:
 2. **Map-reduce over chunks.** A long document never goes into one prompt. The
    chunks are packed into a few groups, each group is reduced to its facts and
    numbers, and every writer works from that same evidence, so all five outputs
-   agree with each other. A 3,000-word document costs one extraction call, not
-   twenty; a 200-page one is capped at six, sampled evenly so the end of the
-   document is never the part that gets dropped.
+   agree with each other. A 3,000-word document costs about four extraction
+   calls rather than twenty; a 200-page one is capped at six, sampled evenly so
+   the end of the document is never the part that gets dropped.
 3. **A machine-checkable contract.** Each output has a JSON Schema sent as
    `response_format`, plus a hand-written validator. A quiz with three options is
    caught in code, not by a human reading the screen.
@@ -73,23 +73,24 @@ upload
   └─ store      store.py        SQLite, then Supabase if configured
 ```
 
-Read **`pipeline/runner.py`** first. It is about a hundred lines: a `for` loop
-over the outputs the planner chose, and a `while` loop that sends a draft back
-to the writer until the critic is satisfied. Everything else in `pipeline/` is a
-part of that loop.
+Read **`pipeline/runner.py`** first. The workflow is `run()`: a `for` loop over
+the outputs the planner chose, and a `while` loop in `_produce()` that sends a
+draft back to the writer until the critic is satisfied. The file is about 400
+lines with the helpers for chunk grouping, context building and the translation
+input; `run()` itself is about 190.
 
 ### The files that matter
 
 | File | Lines | What it is |
 |---|---|---|
-| `pipeline/runner.py` | ~190 | The workflow: chunk → extract → plan → write → critique → repair |
-| `pipeline/llm.py` | ~230 | The only file that talks to Sarvam |
-| `pipeline/agents.py` | ~200 | Four functions, four prompts |
-| `pipeline/schemas.py` | ~290 | The contract for every output type |
-| `pipeline/store.py` | ~200 | SQLite, plus the optional Supabase copy |
-| `pipeline/exports.py` | ~250 | Markdown, DOCX, PPTX, CSV, JSON |
-| `app.py` | ~300 | The Streamlit app — UI only |
-| `api.py` | ~120 | The FastAPI bridge for the landing page |
+| `pipeline/runner.py` | 404 | The workflow: chunk → extract → plan → write → critique → repair |
+| `pipeline/llm.py` | 327 | The only file that talks to Sarvam |
+| `pipeline/agents.py` | 298 | Four functions, four prompts |
+| `pipeline/schemas.py` | 290 | The contract for every output type |
+| `pipeline/store.py` | 234 | SQLite, plus the optional Supabase copy |
+| `pipeline/exports.py` | 294 | Markdown, DOCX, PPTX, CSV, JSON |
+| `app.py` | 307 | The Streamlit app — UI only |
+| `api.py` | 232 | The FastAPI bridge for the landing page |
 | `web/` | — | The HTML, CSS and JavaScript landing page |
 
 ## 4. Running it
@@ -108,6 +109,7 @@ Check the model id before anything else — ids change, and an unknown one retur
 a 404:
 
 ```bash
+set -a; . ./.env; set +a     # load .env into this shell first
 curl -H "api-subscription-key: $SARVAM_API_KEY" https://api.sarvam.ai/v2/models
 ```
 
@@ -130,7 +132,7 @@ python -m pytest
 ### Tests
 
 ```bash
-python -m pytest        # 87 tests, no network, no API key
+python -m pytest        # 118 tests, no network, no API key
 python -m ruff check .  # lint
 ```
 
@@ -141,7 +143,7 @@ and survives a broken output.
 
 ## 5. Wiring Sarvam correctly
 
-Four settings in this project exist because the defaults are wrong for this use
+Five settings in this project exist because the defaults are wrong for this use
 case. They are worth knowing before an examiner asks.
 
 **Base URL.** Chat uses `https://api.sarvam.ai/v2/chat/completions` — the
@@ -152,8 +154,8 @@ ids your key can use.
 also accepts `Authorization: Bearer`. `pipeline/llm.py` sends both. A `403` where
 you expected a `401` almost always means the subscription header was missing.
 
-**`max_tokens` is always explicit.** The API default is 2048, which truncates a
-ten-question quiz mid-object and makes the repair pass fire every single time.
+**`max_tokens` is always explicit.** The API default is 2048, which truncates an
+eight-question deep quiz mid-object and makes the repair pass fire every time.
 `config.MAX_TOKENS` is 4096 and `chat()` never omits it.
 
 **`response_format` uses `json_schema`, not `json_object`.** Structured Outputs
@@ -178,7 +180,8 @@ the time of writing (₹10 per million input tokens, ₹25 per million output
 tokens). **Check the pricing page and put your own numbers in** — a rate from a
 blog post is not a source.
 
-Worked example with those rates: a 3,000-word document is about 4 chunks. That
+Worked example with those rates: a 3,000-word document is about 20 chunks,
+packed into 4 extraction groups. That
 is roughly 4 extraction calls, 1 plan call, and 5 outputs each with a draft and
 a critique — around 15 calls, 25,000 input and 8,000 output tokens. That is
 ₹0.25 + ₹0.20 = **₹0.45 per document**. The real figure is printed in the app,
@@ -199,9 +202,10 @@ under CC BY-SA 4.0, with sources and licences in `evals/testset/manifest.json`.
 **The reference summaries are drafts, not human references** — see
 `evals/README.md` for why that matters and what to do about it.
 
-The numbers currently in `evals/results.csv` come from `--fake`. They prove the
-harness runs. They are not a measurement of the model, and they must not appear
-in the report as one.
+A `--fake` run writes numbers to `evals/results.csv`, which is gitignored — run
+`python evals/run_eval.py --fake` to regenerate them. They prove the harness
+runs. They are not a measurement of the model, and must not appear in the report
+as one.
 
 ### What I would say about the evaluation, honestly
 
@@ -224,7 +228,7 @@ say so.
 | Web bridge | FastAPI | CORS control, rate limiting | Flask |
 | Storage | SQLite, optional Supabase | works offline, syncs when configured | Postgres only |
 | Dashboard | Power BI Desktop | course requirement; `.pbix` needs Windows | Metabase |
-| Tests | pytest | 84 tests, all offline | unittest |
+| Tests | pytest | 118 tests, all offline | unittest |
 
 ## 9. Module breakdown
 
@@ -240,7 +244,7 @@ say so.
 10. **Web layer** (`web/`, `api.py`) — landing page, FastAPI bridge, CORS, rate limit.
 11. **Analytics** (`powerbi/measures.dax`) — DAX measures over the run log.
 12. **Evaluation** (`evals/`) — ROUGE-L, LLM judge, results CSV.
-13. **Tests** (`tests/`) — 84 offline tests.
+13. **Tests** (`tests/`) — 118 offline tests.
 
 ## 10. Privacy, safety and limits
 
@@ -286,7 +290,7 @@ content-forge/
 ├── prompts/               five YAML prompts
 ├── web/                   landing page: index.html, styles.css, app.js
 ├── evals/                 run_eval.py, rouge.py, testset/, references/
-├── tests/                 87 tests, plus fakes.py
+├── tests/                 118 tests, plus fakes.py
 ├── scripts/cli.py         terminal entry point
 ├── sql/schema.sql         Supabase table and view
 ├── powerbi/measures.dax   dashboard measures
@@ -301,7 +305,11 @@ content-forge/
 ## 13. Credits and licence
 
 Course project for CDS208, Sai University. Sarvam AI for the models and the
-translation API. Sample documents in `evals/testset/` are synthetic text written
-for this project; they are not real publications and should not be cited.
+translation API. Of the eleven documents in `evals/testset/`, `01`–`03` are
+synthetic text written for this project and should not be cited; `04`–`11` are
+Wikipedia articles reproduced under CC BY-SA 4.0, with the source URL, retrieval
+date and licence in each file's header and in `evals/testset/manifest.json`.
+Redistributing those eight means keeping the attribution header and the same
+CC BY-SA 4.0 licence on the text.
 
 Code is provided for coursework. No licence is granted for commercial use.

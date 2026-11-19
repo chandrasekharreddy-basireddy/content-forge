@@ -80,10 +80,51 @@ def test_stats_add_up(temp_db):
 
 
 def test_supabase_is_skipped_when_not_configured(temp_db, monkeypatch):
-    """With no Supabase settings, saving must not attempt a network call."""
+    """With no Supabase settings, saving must not attempt a network call.
+
+    Asserting the absence of the call, not the return value: save_run returns
+    True either way, so a return-value assertion cannot see a missing guard.
+    """
     monkeypatch.setattr(store.config, "SUPABASE_URL", "")
     monkeypatch.setattr(store.config, "SUPABASE_KEY", "")
+    calls = []
+    monkeypatch.setattr(store.requests, "post", lambda *a, **k: calls.append(a))
+
     assert store.save_run(sample_record(), db_path=temp_db) is True
+    assert calls == []
+
+
+def test_a_configured_supabase_is_attempted(temp_db, monkeypatch):
+    monkeypatch.setattr(store.config, "SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setattr(store.config, "SUPABASE_KEY", "key")
+    calls = []
+
+    class Response:
+        status_code = 201
+
+    monkeypatch.setattr(store.requests, "post", lambda *a, **k: calls.append(a) or Response())
+    assert store.save_run(sample_record(), db_path=temp_db) is True
+    assert len(calls) == 1
+
+
+def test_a_public_demo_run_keeps_scalars_only(temp_db):
+    """A stranger's pasted text must not be stored as a payload."""
+    record = sample_record()
+    record["doc_name"] = "web-demo.txt"
+    store.save_run(record, db_path=temp_db, supabase=False, keep_payload=False)
+    fetched = store.get_run("abc123", db_path=temp_db)
+    assert "outputs" not in fetched
+    assert fetched["status"] == record["status"]
+
+
+def test_a_csv_cell_starting_with_an_equals_sign_is_neutralised(temp_db):
+    """Otherwise a filename becomes a formula in Excel and Power BI."""
+    record = sample_record()
+    record["doc_name"] = "=cmd|' /C calc'!A0.pdf"
+    store.save_run(record, db_path=temp_db)
+    csv_text = store.runs_as_csv(db_path=temp_db)
+    assert "'=cmd" in csv_text
+    assert ",=cmd" not in csv_text
 
 
 def test_a_dead_supabase_does_not_lose_the_run(temp_db, monkeypatch):

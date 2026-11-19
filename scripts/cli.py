@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--fake", action="store_true", help="use the fake model, no key")
     parser.add_argument("--trace", action="store_true", help="print the trace table")
     parser.add_argument("--no-save", action="store_true", help="do not write to the database")
+    parser.add_argument("--no-write", action="store_true", help="do not write export files")
     args = parser.parse_args()
 
     path = Path(args.path)
@@ -82,27 +83,31 @@ def main() -> int:
                 f"{row['tokens_in']:>7} {row['tokens_out']:>6}  {row['note'][:40]}"
             )
 
-    config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    written = []
-    for name, item in result["outputs"].items():
-        if item["object"] is None:
-            continue
-        for fmt in ("md", "docx"):
-            content, filename, _ = exports.render(name, item["object"], fmt, path.name)
-            (config.OUTPUT_DIR / filename).write_bytes(content)
-            written.append(filename)
+    written: list[str] = []
+    if not args.no_write:
+        config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        for name, item in result["outputs"].items():
+            if item["object"] is None:
+                continue
+            for fmt in ("md", "docx"):
+                content, filename, _ = exports.render(name, item["object"], fmt, path.name)
+                (config.OUTPUT_DIR / filename).write_bytes(content)
+                written.append(filename)
 
-    if result.get("translation") and result["translation"]["status"] == "ok":
-        filename = f"translation_{result['translation']['language']}.txt"
-        (config.OUTPUT_DIR / filename).write_text(
-            result["translation"]["text"], encoding="utf-8"
-        )
-        written.append(filename)
+        if result.get("translation") and result["translation"]["status"] == "ok":
+            filename = f"translation_{result['translation']['language']}.txt"
+            (config.OUTPUT_DIR / filename).write_text(
+                result["translation"]["text"], encoding="utf-8"
+            )
+            written.append(filename)
 
     if not args.no_save:
         store.save_run(result)
 
-    print(f"\n{len(written)} files written to {config.OUTPUT_DIR.relative_to(ROOT)}/")
+    if args.no_write:
+        print("\n--no-write: no export files were written")
+    else:
+        print(f"\n{len(written)} files written to {config.OUTPUT_DIR.relative_to(ROOT)}/")
     print(f"cost: ₹{result['usage']['cost_inr']:.4f} "
           f"({result['usage']['prompt_tokens']} in, "
           f"{result['usage']['completion_tokens']} out), "

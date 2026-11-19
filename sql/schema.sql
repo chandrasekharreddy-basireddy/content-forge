@@ -37,7 +37,10 @@ alter table public.runs enable row level security;
 --     for select to authenticated using (true);
 
 -- A view for the dashboard, so Power BI has one obvious table to point at.
-create or replace view public.run_summary as
+-- security_invoker = on matters: without it the view runs as its owner and
+-- hands anon a way around the row-level security above. Then revoke it from
+-- anon outright - the dashboard connects with the service key.
+create or replace view public.run_summary with (security_invoker = on) as
 select
     date_trunc('day', created_at) as run_day,
     status,
@@ -49,3 +52,5 @@ select
     round(avg(duration_ms) / 1000.0, 1) as avg_seconds
 from public.runs
 group by 1, 2, 3;
+
+revoke all on public.run_summary from anon, authenticated;

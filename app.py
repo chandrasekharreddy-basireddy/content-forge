@@ -83,6 +83,12 @@ def build_tab() -> None:
         st.info("Upload a PDF, DOCX, TXT or MD file to begin.", icon="📄")
         return
 
+    # A new file means the old results are about a different document. Clear
+    # them, or the page shows document A's quiz under document B's name.
+    if st.session_state.get("last_doc") not in (None, uploaded.name):
+        st.session_state.pop("last_run", None)
+        st.session_state.pop("last_doc", None)
+
     data = uploaded.getvalue()
     try:
         text = ingest.read_document(uploaded.name, data)

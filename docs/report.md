@@ -89,11 +89,12 @@ upload (PDF / DOCX / TXT / MD)
 [FILL: insert the architecture diagram here — a five-layer version of the above
 with the technology named on each layer.]
 
-The workflow itself is `pipeline/runner.py`: a `for` loop over the planned
-outputs and a `while` loop that returns a draft to the writer until the critic
-passes it. There is no orchestration framework. That was a deliberate choice:
-LangGraph would have been defensible, but a hundred lines of Python that can be
-explained line by line is worth more in a viva than a graph library.
+The workflow itself is `pipeline/runner.py`: `run()` holds a `for` loop over the
+planned outputs and `_produce()` holds the `while` loop that returns a draft to
+the writer until the critic passes it. There is no orchestration framework. That
+was a deliberate choice: LangGraph would have been defensible, but plain
+functions that can be explained line by line are worth more in a viva than a
+graph library.
 
 ### Technology stack
 
@@ -191,7 +192,7 @@ Failure handling is part of the design, not an afterthought:
 
 ## 6. Implementation
 
-`[FILL: 4,200]` lines of Python across `[FILL: 13]` modules, `[FILL: 87]`
+`[FILL: 3,200]` lines of Python across `[FILL: 13]` modules, `[FILL: 118]`
 offline tests, CI green on Python 3.11 and 3.12.
 
 The module breakdown is in `docs/proposal.md` §6; the two files worth pointing

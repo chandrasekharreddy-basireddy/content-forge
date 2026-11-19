@@ -90,6 +90,19 @@ def check_key() -> str:
         say(FAIL, "the key is wrapped in quotes")
         say(WARN, "fix: SARVAM_API_KEY=your-key-here, with no quote marks")
 
+    # A key is letters, digits, underscore and hyphen. Anything else - a smart
+    # quote, a zero-width space, a non-breaking space - is invisible on screen
+    # and produces exactly the 403 this check exists to explain.
+    odd = [(index, char) for index, char in enumerate(key)
+           if not (char.isascii() and (char.isalnum() or char in "_-"))]
+    if odd:
+        problems += 1
+        index, char = odd[0]
+        say(FAIL, f"the key contains a character that is not a letter, digit, "
+                  f"_ or - at position {index + 1}: U+{ord(char):04X}")
+        say(WARN, "fix: delete the key in .env and paste it again by hand, or "
+                  "retype it - a smart quote or zero-width space looks identical")
+
     say(OK, f"key loaded: {len(key)} characters, starts {key[:4]}...")
     if len(key) < 20:
         problems += 1

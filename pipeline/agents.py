@@ -181,7 +181,10 @@ def plan(
     filtered against the allowed list, and a failure falls back to a sane
     default rather than stopping the run.
     """
-    preview = chunks[0][:1500] if chunks else ""
+    # Enough to see the shape of the document, not just its first paragraph: a
+    # 361-word list of ten projects was judged from a 1,500-character window and
+    # the planner reported "five projects". Short documents are passed whole.
+    preview = "\n\n".join(chunks)[:2500]
     structure = describe_structure(chunks)
 
     messages = build_messages(

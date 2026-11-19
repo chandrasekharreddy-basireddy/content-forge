@@ -10,6 +10,7 @@ looks wrong: it has no UI in the way, so the trace is the whole story.
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -34,6 +35,10 @@ def main() -> int:
     parser.add_argument("--trace", action="store_true", help="print the trace table")
     parser.add_argument("--no-save", action="store_true", help="do not write to the database")
     parser.add_argument("--no-write", action="store_true", help="do not write export files")
+    parser.add_argument(
+        "--show", action="store_true",
+        help="print each output as JSON, with the critic's verdict and defects",
+    )
     args = parser.parse_args()
 
     path = Path(args.path)
@@ -90,6 +95,16 @@ def main() -> int:
     for name, item in result["outputs"].items():
         score = f"{item['score']}/5" if item["score"] else item["status"]
         print(f"  {name:<12} {score:<8} {item['error'] or ''}")
+
+    if args.show:
+        for name, item in result["outputs"].items():
+            print(f"\n--- {name}: status {item['status']}, score {item['score']}, "
+                  f"rounds {item['rounds']} ---")
+            if item["defects"]:
+                print("critic defects:")
+                for defect in item["defects"]:
+                    print(f"  - {defect}")
+            print(json.dumps(item["object"], ensure_ascii=False, indent=2)[:2000])
 
     if args.trace:
         print(f"\n{'step':<20} {'model':<22} {'ms':>6} {'in':>7} {'out':>6}  note")

@@ -24,7 +24,8 @@ system: |
       standard = normal article or chapter
       deep     = long, dense source with many facts worth testing
   - Give one sentence of reasoning. It is shown to the user, so write it for
-    a person, not for a machine.
+    a person, not for a machine. Refer to the document by what it is about,
+    not by how much of it you were shown.
 
   Reply with JSON only, matching this shape:
   {{"outputs": ["summary"], "depth": "standard", "reason": "one sentence"}}
@@ -36,7 +37,10 @@ user: |
   Document size: {words} words, split into {chunks} chunks
   Detected structure: {structure}
 
-  Opening of the document:
+  The first part of the document follows. The size above is the WHOLE document;
+  this extract is only its opening, so do not assume that the rest is missing
+  or that the document is as short as the extract. Judge the whole document by
+  its stated size, and use the extract to see what kind of material it is:
   """
   {preview}
   """

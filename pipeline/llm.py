@@ -31,6 +31,19 @@ def _headers() -> dict:
     means the subscription header was missing.
     """
     key = config.SARVAM_API_KEY
+
+    # An HTTP header is latin-1. A key with a smart quote or a zero-width space
+    # in it - both invisible on screen after a copy from a dashboard - raises
+    # UnicodeEncodeError deep inside requests, which is not an LLMError and
+    # surfaces as a codec traceback. Say what it actually is.
+    try:
+        key.encode("latin-1")
+    except UnicodeEncodeError as exc:
+        raise LLMError(
+            "SARVAM_API_KEY contains a character that is not ASCII "
+            f"(position {exc.start + 1}). Paste the key again by hand."
+        ) from exc
+
     return {
         "api-subscription-key": key,
         "Authorization": f"Bearer {key}",

@@ -165,8 +165,8 @@ def check_auth_variants(key: str) -> None:
             if response.status_code != 200:
                 detail = "  " + response.text[:90].replace("\n", " ")
             print(f"  {response.status_code}  {label}{detail}")
-        except requests.RequestException as exc:
-            print(f"  ---  {label}  (network: {exc})")
+        except Exception as exc:  # noqa: BLE001 - a bad key can raise anything
+            print(f"  ---  {label}  ({type(exc).__name__}: {exc})")
 
 
 def check_paths() -> None:

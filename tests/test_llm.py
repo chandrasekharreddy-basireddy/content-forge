@@ -259,3 +259,11 @@ def test_a_translation_400_is_not_retried(monkeypatch):
     with pytest.raises(llm.LLMError):
         llm.translate("hello", target_language="hi-IN")
     assert len(attempts) == 1
+
+
+def test_a_key_with_an_invisible_character_says_so(monkeypatch):
+    """A smart quote in a pasted key is not a codec error, it is a bad key."""
+    monkeypatch.setattr(config, "SARVAM_API_KEY", "sk_smart\u2019quote")
+    with pytest.raises(llm.LLMError) as error:
+        llm.chat([{"role": "user", "content": "hi"}])
+    assert "ASCII" in str(error.value)

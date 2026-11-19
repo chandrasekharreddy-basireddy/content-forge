@@ -110,23 +110,63 @@ def check_key() -> str:
     return key
 
 
+def check_key_live(key: str) -> bool:
+    """3. The decisive test: an endpoint that refuses to answer without a key.
+
+    GET /v2/models is NOT that endpoint. It hands the model list to a request
+    carrying no authentication at all, and only rejects one carrying a bad key
+    - so a 200 from it can mean "no key was sent". That ambiguity cost an
+    afternoon once. POST /translate needs a real key, costs a fraction of a
+    paisa, and answers 200 only when the key is genuine.
+    """
+    global problems
+    import requests
+
+    body = {
+        "input": "hello",
+        "source_language_code": "en-IN",
+        "target_language_code": "hi-IN",
+        "model": config.TRANSLATE_MODEL,
+    }
+    try:
+        response = requests.post(
+            config.TRANSLATE_URL,
+            headers={"api-subscription-key": key, "Content-Type": "application/json"},
+            json=body,
+            timeout=30,
+        )
+    except Exception as exc:  # noqa: BLE001 - a bad key can raise anything
+        problems += 1
+        say(FAIL, f"the request could not be sent: {type(exc).__name__}: {exc}")
+        return False
+
+    if response.status_code == 200:
+        say(OK, "the key works: /translate accepted it and returned a translation")
+        return True
+
+    problems += 1
+    say(FAIL, f"/translate rejected the key: HTTP {response.status_code}")
+    say(WARN, response.text[:160].replace("\n", " "))
+    if response.status_code in (401, 403):
+        say(WARN, "the key itself is not accepted. Check, in this order:")
+        say(WARN, "  1. it was copied whole, with no invisible characters (see above)")
+        say(WARN, "  2. it came from dashboard.sarvam.ai, not apps.sarvam.ai")
+        say(WARN, "  3. the subscription on that account is active")
+        say(WARN, "  4. regenerate the key and try the new one")
+    return False
+
+
 def check_models() -> None:
-    """3 and 4. Does the key work, and what can it use?"""
+    """4. Which model ids can this key use?"""
     global problems
     try:
         models = llm.list_models()
     except llm.LLMError as error:
         problems += 1
-        text = str(error)
-        say(FAIL, f"Sarvam rejected the request: {text[:160]}")
-        if "403" in text or "401" in text:
-            say(WARN, "that is an authentication failure, not a network one:")
-            say(WARN, "  - the key is wrong, expired, or from a different account")
-            say(WARN, "  - or .env was not read (check the two lines above)")
-            say(WARN, "  - get a fresh key from dashboard.sarvam.ai > API keys")
+        say(FAIL, f"could not list models: {str(error)[:160]}")
         return
 
-    say(OK, f"Sarvam accepted the key: {len(models)} model ids available")
+    say(OK, f"{len(models)} model ids available to this account")
     for model in models:
         print(f"       {model}")
 
@@ -192,7 +232,10 @@ def main() -> int:
         check_auth_variants(key)
         print()
     if key:
-        check_models()
+        worked = check_key_live(key)
+        print()
+        if worked:
+            check_models()
     print()
     check_paths()
 

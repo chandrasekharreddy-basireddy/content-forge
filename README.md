@@ -115,12 +115,15 @@ curl -H "api-subscription-key: $SARVAM_API_KEY" https://api.sarvam.ai/v2/models
 ```
 
 ```powershell
-# Windows PowerShell - and this works everywhere, because it is our own client
-python -c "from pipeline import llm; print(chr(10).join(llm.list_models()))"
+# Windows PowerShell - works everywhere, because it is our own client
+python scripts\check_setup.py
 ```
 
 On Windows, `curl` is an alias for `Invoke-WebRequest` and `set -a` is not a
-thing, so use the Python one-liner. It prints the ids your key can use.
+thing, so use `scripts/check_setup.py`. It checks the whole chain and finishes
+with a real `POST /translate`, which is the only call that proves the key:
+`GET /v2/models` answers a request with no authentication at all, so a 200 from
+it can mean no key was sent.
 
 Then, three ways to use it:
 

@@ -32,8 +32,7 @@ def test_numbers_are_found_and_normalised():
 
 def test_a_number_in_the_source_is_not_a_defect():
     draft = long_summary("Capacity reached 174.55 GW in October 2026.")
-    source = "Project 1 is the Academia-Industry Skill Mapping and Placement Portal."
-    assert checks.unsourced_numbers(draft, source) == []
+    assert checks.unsourced_numbers(draft, SOURCE) == []
 
 
 def test_an_invented_number_is_named():
@@ -214,7 +213,8 @@ def test_a_quiz_answer_index_is_not_treated_as_a_claim():
             }
         ]
     }
-    assert checks.unsourced_numbers(draft, SOURCE) == []
+    source = "Project 1 is the Academia-Industry Skill Mapping and Placement Portal."
+    assert checks.unsourced_numbers(draft, source) == []
 
 
 def test_a_one_question_quiz_is_a_defect():

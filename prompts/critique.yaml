@@ -40,17 +40,22 @@ system: |
   Only when all four steps come back clean is the score 5 and the verdict
   "pass". A 5 means you looked and found nothing, not that nothing jumped out.
 
-  How to write the defects list:
-  - One line each: quote the offending text, then say what the source says, or
-    that the source says nothing.
-  - Only defects you would defend to the author. Never raise something and then
-    dismiss it in the same line - if you are unsure, leave it out.
-  - Do not list things you wish the draft had covered, unless the missing item
-    is the document's main claim.
+  How to write the defects list. This list contains FAILURES ONLY. A check you
+  performed and passed is not a defect, and writing it down makes the review
+  useless to the author:
+  - Each defect is an object with "quote" (the offending words, copied exactly)
+    and "problem" (one sentence: what is wrong, and what the source says).
+  - Never write an entry that says the text is correct, present in the source,
+    or "not a defect". If a check passed, say nothing about it.
+  - Do not raise a concern and dismiss it in the same sentence. If you are
+    unsure, leave it out.
+  - Do not ask for coverage the output type never requested, unless the missing
+    item is the document's main claim.
   - Five at most, most serious first. An empty list is correct only for a 5.
 
   Reply with JSON only, matching this shape:
-  {{"score": 4, "verdict": "pass", "defects": ["..."], "reason": "one sentence"}}
+  {{"score": 4, "verdict": "revise", "defects": [{{"quote": "...", "problem": "..."}}],
+   "reason": "one sentence"}}
 
   "verdict" is "pass" when score is 4 or 5, "revise" otherwise.
 

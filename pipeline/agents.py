@@ -98,7 +98,21 @@ CRITIQUE_SCHEMA = {
         "properties": {
             "score": {"type": "integer"},
             "verdict": {"type": "string"},
-            "defects": {"type": "array", "items": {"type": "string"}},
+            # Structured, because a bare string list invites the model to write
+            # down the checks it performed and passed. A quote plus a problem
+            # has no room for "this is correct, but".
+            "defects": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "quote": {"type": "string"},
+                        "problem": {"type": "string"},
+                    },
+                    "required": ["quote", "problem"],
+                    "additionalProperties": False,
+                },
+            },
             "reason": {"type": "string"},
         },
         "required": ["score", "verdict", "defects", "reason"],
@@ -264,16 +278,36 @@ def critique(
     if not isinstance(score, int) or isinstance(score, bool):
         raise AgentError(f"critic returned a non-integer score: {score!r}")
 
-    defects = result.get("defects") or []
-    if not isinstance(defects, list):
-        defects = [str(defects)]
+    defects = _read_defects(result.get("defects"))
 
     return {
         "score": max(1, min(5, score)),
         "verdict": str(result.get("verdict", "revise")),
-        "defects": [str(d) for d in defects],
+        "defects": defects,
         "reason": str(result.get("reason", "")).strip(),
     }, usage
+
+
+def _read_defects(raw) -> list[str]:
+    """Flatten the critic's defects into readable lines.
+
+    The schema asks for {"quote", "problem"} objects. A plain string is still
+    accepted, because a cached reply or a test fake may use the older shape,
+    and refusing it would turn a cosmetic mismatch into a failed run.
+    """
+    if not isinstance(raw, list):
+        return [str(raw)] if raw else []
+
+    lines: list[str] = []
+    for item in raw:
+        if isinstance(item, dict):
+            quote = str(item.get("quote", "")).strip().strip('"')
+            problem = str(item.get("problem", "")).strip()
+            if problem:
+                lines.append(f'"{quote}" - {problem}' if quote else problem)
+        elif str(item).strip():
+            lines.append(str(item))
+    return lines
 
 
 def describe_structure(chunks: list[str]) -> str:

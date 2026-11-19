@@ -234,3 +234,20 @@ def test_a_run_that_shipped_only_flagged_outputs_is_partial_not_failed(sample_te
     record, _, _ = run_once(sample_text, scores=[1] * 10, outputs=["summary"])
     assert record["outputs"]["summary"]["status"] == "flagged"
     assert record["status"] == "partial"
+
+
+def test_structured_defects_become_readable_lines():
+    """The critic returns {quote, problem}; the record keeps readable strings."""
+    from pipeline.agents import _read_defects
+
+    raw = [
+        {"quote": "974.55 GWAC", "problem": "the source says 174.55 GWAC"},
+        {"quote": "", "problem": "the summary misses the document's main claim"},
+        "legacy string defect",
+    ]
+    lines = _read_defects(raw)
+    assert lines[0] == '"974.55 GWAC" - the source says 174.55 GWAC'
+    assert lines[1] == "the summary misses the document's main claim"
+    assert lines[2] == "legacy string defect"
+    assert _read_defects([]) == []
+    assert _read_defects(None) == []

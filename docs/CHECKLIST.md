@@ -48,9 +48,18 @@ changing to start.
 ## 4. Check the key and the model id
 
 ```bash
+# Bash / macOS / Linux
 set -a; . ./.env; set +a
 curl -H "api-subscription-key: $SARVAM_API_KEY" https://api.sarvam.ai/v2/models
 ```
+
+```powershell
+# Windows PowerShell - works everywhere, because it is our own client
+python -c "from pipeline import llm; print(chr(10).join(llm.list_models()))"
+```
+
+On Windows, `curl` is an alias for `Invoke-WebRequest` and `set -a` is not a
+thing, so use the Python one-liner.
 
 - [ ] You got a model list back. If you got 403, the header is missing or the
       key is wrong. If you got a list, check that `sarvam-105b` is in it — if it

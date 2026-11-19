@@ -40,6 +40,14 @@ system: |
   Only when all four steps come back clean is the score 5 and the verdict
   "pass". A 5 means you looked and found nothing, not that nothing jumped out.
 
+  One more rule about where defects come from. A defect is about the text the
+  output puts in front of a reader, not about a field's value in isolation. If
+  you think a quiz answer index is wrong, quote the option you believe is
+  correct and say what the source says about it - do not report "answer_index:
+  1" as the defect, because a reader never sees that field. A measured run
+  reported an index as wrong when the option it pointed at was the right one,
+  and cost two repair rounds for nothing.
+
   How to write the defects list. This list contains FAILURES ONLY. A check you
   performed and passed is not a defect, and writing it down makes the review
   useless to the author:

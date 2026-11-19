@@ -285,9 +285,31 @@ over:
    for. The prompt now says one line per defect, only what you would defend to
    the author, and five at most.
 
-[FILL: re-run `python evals/critic_test.py` after those prompt changes and put
-the new scores beside these. A before-and-after pair is worth more than either
-number alone.]
+3. **The critic was judging a truncated source.** It received the first 6,000
+   characters while the writer worked from 7,000, so genuine content from the
+   last thousand characters looked invented — and the critic duly reported a
+   hallucination that was not one. The window now covers everything the writer
+   saw. This is the most useful bug the calibration test found, because it is
+   invisible from outside: the scores looked reasonable and the defect looked
+   like real prose.
+
+After those three fixes, the second run read:
+
+| Draft | Score | Defects |
+|---|---|---|
+| Honest | 5 / 5 | 0 |
+| Figure changed (`174.55 GW` → `974.55 GW`) | 2 / 5 | 1 |
+| Invented statistic appended | 4 / 5 | 1 |
+
+The invented statistic still scored 4, so the cap moved out of the prompt and
+into code: `pipeline/checks.py` looks up every number in the draft against the
+source, and one that is missing caps the score at 2 whatever the model said.
+The model proposes, the code disposes.
+
+[FILL: re-run `python evals/critic_test.py` once more and put the final scores
+here. Three runs, each fixing what the last one exposed, is the honest account
+of how the critic was built — and a better answer than a table that was right
+the first time.]
 
 ### What the numbers do not say
 

@@ -1,0 +1,27 @@
+[SAMPLE DOCUMENT - synthetic text written for testing the harness, not a real publication.]
+
+Digitising a paper archive is less about scanning than about deciding what not
+to scan. A typical district archive holds three kinds of material: administrative
+records with a legal retention period, correspondence of uncertain value, and
+publications that already exist elsewhere in digital form.
+
+The retention schedule comes first. Anything with a legal retention period must
+be scanned to a preservation standard - 400 dots per inch, uncompressed TIFF,
+with a checksum recorded for every file. Anything already digitised elsewhere is
+catalogued and linked rather than rescanned.
+
+Correspondence is the hard part. It is bulky, it is often handwritten, and its
+value is not known at the time of scanning. The practical answer is a two-tier
+approach: scan everything at access quality - 300 dots per inch, compressed PDF -
+and re-scan at preservation quality only those items a researcher requests. This
+keeps the cost of the first pass predictable.
+
+Handwriting needs transcription, not just imaging, and transcription is the part
+that is usually under-budgeted. A rough rule from completed projects is that one
+transcriber clears between eight and twelve pages of clear nineteenth-century
+hand a day, and far fewer when the hand is difficult.
+
+Finally, the catalogue matters more than the scans. An archive that cannot be
+searched is a warehouse. Every item needs a date, a place, an author and a short
+description before it is considered done, and that metadata work is best done by
+the same person who scanned it, while the context is still fresh.

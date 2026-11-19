@@ -1,0 +1,7 @@
+Shift handovers fail for three reasons: wrong timing, wrong content, or no record.
+The useful window is the last twenty minutes of the shift, while the plant is
+still running. The content that matters is what has changed, what is abnormal and
+what the next shift must not touch, not a summary of the whole shift. A written
+sheet signed by both shifts, with sections for changes, abnormal conditions and
+hold points, is the only version that survives an incident review. The commonest
+improvement is simply fixing a scheduled slot both shifts plan around.

@@ -1,0 +1,28 @@
+# Secrets - the one thing that must never be committed
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Data and generated files
+data/
+outputs/
+*.db
+*.sqlite3
+evals/results.csv
+
+# Power BI
+*.pbix
+*.pbix.bak
+
+# OS
+.DS_Store
+Thumbs.db

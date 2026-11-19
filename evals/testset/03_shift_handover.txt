@@ -1,0 +1,24 @@
+[SAMPLE DOCUMENT - synthetic text written for testing the harness, not a real publication.]
+
+A shift handover fails for one of three reasons: it happens at the wrong time, it
+carries the wrong information, or it is not written down.
+
+Timing first. A handover that begins when the outgoing shift has already stopped
+work is a handover of conclusions, not of state. The useful window is the last
+twenty minutes of the shift, while the plant is still running and the outgoing
+operator can point at what is actually happening.
+
+Content second. The information that matters is what has changed since the last
+handover, what is currently abnormal, and what the next shift must not touch.
+Everything else - the full log, the routine readings - belongs in the record, not
+in the spoken handover. Handovers that try to summarise the whole shift are
+consistently rated less useful than short ones focused on exceptions.
+
+Recording third. A spoken handover is lost the moment it ends. A written handover
+sheet, signed by both shifts, is the only version that survives an incident
+review. The sheet does not need to be long: three sections - changes, abnormal
+conditions, hold points - and space for the incoming operator to write questions.
+
+The most common improvement, in practice, is not a new form but a fixed time.
+When the handover has a scheduled slot that both shifts plan around, its quality
+improves even when nothing else changes.

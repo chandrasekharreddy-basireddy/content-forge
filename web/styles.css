@@ -1,0 +1,375 @@
+/* Content Forge landing page.
+   One stylesheet, no framework. Two colours, one accent, a lot of space. */
+
+:root {
+  --ink: #12212b;
+  --ink-soft: #4a5b66;
+  --paper: #fbfaf7;
+  --line: #dfdbd2;
+  --accent: #0b6b5e;
+  --accent-soft: #e3f0ed;
+  --flag: #8a5a00;
+  --radius: 10px;
+  --max: 940px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.01em; }
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.9em;
+  background: #eeeae1;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* --- header ------------------------------------------------------------- */
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: rgba(251, 250, 247, 0.92);
+  backdrop-filter: blur(6px);
+  z-index: 10;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.site-header nav { display: flex; gap: 1.25rem; }
+
+.site-header nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.site-header nav a:hover { color: var(--accent); }
+
+/* --- hero --------------------------------------------------------------- */
+
+.hero {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: clamp(3rem, 9vw, 6rem) clamp(1rem, 4vw, 2.5rem) 2rem;
+}
+
+.eyebrow {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+}
+
+.hero h1 {
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  margin: 0 0 1.25rem;
+  font-weight: 600;
+}
+
+.lede {
+  font-size: 1.12rem;
+  color: var(--ink-soft);
+  max-width: 34rem;
+  margin: 0 0 2rem;
+}
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+.hero-note {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-top: 1.5rem;
+}
+
+/* --- buttons ------------------------------------------------------------ */
+
+.button {
+  display: inline-block;
+  padding: 0.65rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.button.primary { background: var(--accent); color: #fff; }
+.button.primary:hover:not(:disabled) { transform: translateY(-1px); }
+
+.button.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+.button.ghost:hover { border-color: var(--ink-soft); }
+
+.button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* --- sections ----------------------------------------------------------- */
+
+.section {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 3.5rem) clamp(1rem, 4vw, 2.5rem);
+  border-top: 1px solid var(--line);
+}
+
+.section h2 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  margin: 0 0 0.5rem;
+}
+
+.section-lede { color: var(--ink-soft); margin: 0 0 2rem; max-width: 40rem; }
+
+/* --- steps -------------------------------------------------------------- */
+
+.steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.steps li {
+  counter-increment: step;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  background: #fff;
+}
+
+.steps li::before {
+  content: counter(step);
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.steps h3 { font-size: 1rem; margin: 0 0 0.35rem; }
+
+.steps p { margin: 0; font-size: 0.92rem; color: var(--ink-soft); }
+
+/* --- demo form ---------------------------------------------------------- */
+
+.demo {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.demo label { font-size: 0.85rem; color: var(--ink-soft); }
+
+textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+textarea:focus, select:focus {
+  outline: 2px solid var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.counter {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.outputs {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.8rem 1rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+}
+
+.outputs legend {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  padding: 0 0.4rem;
+}
+
+.outputs label, .inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+select {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-family: inherit;
+  font-size: 0.9rem;
+  max-width: 12rem;
+}
+
+/* --- status and results ------------------------------------------------- */
+
+.status {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  min-height: 1.4rem;
+  margin: 1rem 0 0;
+}
+
+.status.error { color: #a3271f; }
+
+.result { display: grid; gap: 1.2rem; margin-top: 1.2rem; }
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 1.2rem 1.4rem;
+}
+
+.card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.card h3 { margin: 0; font-size: 1.05rem; }
+
+.score {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.score.flagged { background: #fdf0d8; color: var(--flag); }
+
+.card ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+
+.card li { margin-bottom: 0.3rem; }
+
+.quiz-question { margin-bottom: 1rem; }
+
+.quiz-question strong { display: block; margin-bottom: 0.3rem; }
+
+.quiz-option { font-size: 0.92rem; color: var(--ink-soft); }
+.quiz-option.correct { color: var(--accent); font-weight: 600; }
+
+.flashcard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.flashcard {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.flashcard b { display: block; margin-bottom: 0.2rem; }
+
+/* --- stack and footer --------------------------------------------------- */
+
+.stack { list-style: none; padding: 0; display: grid; gap: 0.6rem; max-width: 42rem; }
+
+.stack li {
+  font-size: 0.94rem;
+  color: var(--ink-soft);
+  padding-left: 1rem;
+  border-left: 2px solid var(--accent-soft);
+}
+
+.stack strong { color: var(--ink); }
+
+.stats {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 1.6rem;
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 1.5rem clamp(1rem, 4vw, 2.5rem);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.site-footer p { max-width: var(--max); margin: 0 auto; }
+
+@media (max-width: 560px) {
+  .site-header nav { display: none; }
+  .hero { padding-top: 2.5rem; }
+}

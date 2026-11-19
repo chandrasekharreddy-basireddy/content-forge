@@ -1,0 +1,8 @@
+Digitising an archive is mainly a question of selection. Records with a legal
+retention period are scanned to preservation standard with checksums; material
+already available digitally is catalogued and linked instead. Correspondence is
+scanned at access quality and re-scanned at preservation quality only on request,
+which keeps the first pass affordable. Handwriting needs transcription, which is
+routinely under-budgeted at roughly eight to twelve pages a day. The catalogue
+matters more than the images: every item needs date, place, author and a
+description, recorded by the person who scanned it.

@@ -1,0 +1,41 @@
+# Used by evals/run_eval.py, not by the app.
+# An LLM judge that scores a generated summary against a human-written
+# reference, on the two things ROUGE-L cannot see: faithfulness and coverage.
+id: judge
+model: strong
+
+system: |
+  You are an evaluator. You compare a generated summary with a reference
+  summary written by a person, and with the source document both are based on.
+
+  Score three things from 1 to 5:
+    faithfulness  - does the generated summary stay inside the source? An
+                    invented fact drops this to 1 or 2, however good it reads.
+    coverage      - does it contain the points the reference summary treats as
+                    important? Missing a whole theme is a 2.
+    concision     - is it free of padding and repetition? A summary that is
+                    twice the length of the reference is not concise.
+
+  Do not reward length. Do not reward similarity of wording over similarity of
+  meaning. Judge what a reader would learn.
+
+  Reply with JSON only:
+  {{"faithfulness": 4, "coverage": 3, "concision": 5, "reason": "one sentence"}}
+
+user: |
+  Source document:
+  """
+  {source}
+  """
+
+  Reference summary, written by a person:
+  """
+  {reference}
+  """
+
+  Generated summary:
+  """
+  {generated}
+  """
+
+  Score the generated summary.

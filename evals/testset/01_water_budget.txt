@@ -1,0 +1,28 @@
+[SAMPLE DOCUMENT - synthetic text written for testing the harness, not a real publication.]
+
+A municipal water budget is built in four stages. First, the utility estimates
+demand by multiplying the number of connections in each category - domestic,
+commercial, institutional - by an average consumption figure for that category.
+Second, it estimates supply, which for a city dependent on a single reservoir is
+simply the reservoir's expected inflow minus evaporation losses.
+
+Third, the utility reconciles the two. In a dry year the gap is closed by
+restricting supply, buying tanker water, or deferring maintenance. In a wet year
+the surplus is carried forward as a reserve, capped at roughly one month of
+average demand.
+
+Fourth, the budget is published. The published version separates operating cost
+from capital cost, because the two are funded differently: operating cost comes
+from tariffs, capital cost from grants and borrowing. Mixing them is the most
+common error in a municipal budget, and it hides a tariff shortfall inside a
+capital line.
+
+Two figures matter more than the rest. Non-revenue water - the share of treated
+water that never reaches a paying customer - is typically the largest single
+inefficiency, and a one-point improvement is often worth more than a tariff
+increase. Cost per kilolitre delivered is the other: it is the only figure that
+lets one city be compared with another of a different size.
+
+The budget is revised twice a year. The mid-year revision is technical, adjusting
+for actual inflow. The year-end revision is political, and it is where reserve
+transfers happen.

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Content Forge — one document, many formats</title>
+  <meta name="description" content="Turn a document into a summary, a quiz, flashcards, a report or a slide deck, using Sarvam's models." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true">CF</span>
+      <span>Content Forge</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#try">Try it</a>
+      <a href="#stack">Stack</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">CDS208 · Emerging Tools and Applications</p>
+      <h1>One document in.<br />Five formats out.</h1>
+      <p class="lede">
+        Content Forge reads a source document, pulls the facts out of it, and
+        writes study material that stays inside those facts. A critic agent
+        scores every draft and sends it back until it is good enough to ship.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="#try">Try the live demo</a>
+        <a class="button ghost" href="#how">See how it works</a>
+      </div>
+      <p class="hero-note" id="health">Checking the server…</p>
+    </section>
+
+    <section id="how" class="section">
+      <h2>How it works</h2>
+      <p class="section-lede">
+        Five steps, in this order. The whole workflow is
+        <code>pipeline/runner.py</code>, about a hundred lines of Python.
+      </p>
+      <ol class="steps">
+        <li>
+          <h3>Chunk</h3>
+          <p>The document is split into overlapping pieces, so a fact on a
+             boundary is never lost.</p>
+        </li>
+        <li>
+          <h3>Extract</h3>
+          <p>Each chunk is reduced to its facts and its exact numbers. This is
+             the map half of map-reduce.</p>
+        </li>
+        <li>
+          <h3>Plan</h3>
+          <p>A planner decides which outputs this document can honestly support,
+             and how deep to go.</p>
+        </li>
+        <li>
+          <h3>Write &amp; critique</h3>
+          <p>A writer drafts the output; a critic scores it out of five and names
+             what is wrong.</p>
+        </li>
+        <li>
+          <h3>Repair</h3>
+          <p>Below four, the draft goes back to the writer with the defects. Twice
+             at most, then it ships flagged.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="try" class="section">
+      <h2>Try it</h2>
+      <p class="section-lede">
+        Paste 200 characters or more of your own text. The demo produces up to
+        three outputs per request.
+      </p>
+
+      <form id="demo-form" class="demo" novalidate>
+        <label for="source">Source text</label>
+        <textarea id="source" name="source" rows="8" required
+          placeholder="Paste an article, your own notes, or a public document…"></textarea>
+        <div class="counter"><span id="count">0</span> characters</div>
+
+        <fieldset class="outputs">
+          <legend>Outputs</legend>
+          <label><input type="checkbox" name="outputs" value="summary" checked /> Summary</label>
+          <label><input type="checkbox" name="outputs" value="quiz" checked /> Quiz</label>
+          <label><input type="checkbox" name="outputs" value="flashcards" /> Flashcards</label>
+          <label><input type="checkbox" name="outputs" value="report" /> Report</label>
+          <label><input type="checkbox" name="outputs" value="slides" /> Slides</label>
+        </fieldset>
+
+        <label class="inline">
+          <input type="checkbox" id="translate" /> Also translate the summary
+        </label>
+        <select id="language" disabled>
+          <option value="hi-IN">Hindi</option>
+          <option value="bn-IN">Bengali</option>
+          <option value="ta-IN">Tamil</option>
+          <option value="te-IN">Telugu</option>
+          <option value="mr-IN">Marathi</option>
+          <option value="kn-IN">Kannada</option>
+        </select>
+
+        <button type="submit" class="button primary" id="run">Transform</button>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="result" class="result"></div>
+    </section>
+
+    <section id="stack" class="section">
+      <h2>What it is built with</h2>
+      <ul class="stack">
+        <li><strong>Sarvam V2 chat completions</strong> — the writing and
+            critiquing models, with Structured Outputs so replies match a schema.</li>
+        <li><strong>Sarvam /translate</strong> — a purpose-built translation model,
+            not a chat prompt, for Indic output.</li>
+        <li><strong>Python</strong> — a plain pipeline, no orchestration framework.</li>
+        <li><strong>Streamlit</strong> — the full app, with uploads and downloads.</li>
+        <li><strong>HTML, CSS, JavaScript</strong> — this page, talking to a FastAPI
+            bridge.</li>
+        <li><strong>SQLite and Supabase</strong> — every run logged, for the dashboard.</li>
+        <li><strong>Power BI</strong> — quality and cost across runs.</li>
+      </ul>
+      <p class="stats" id="stats"></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Content Forge — a CDS208 final project. Built solo by Chandra Sekhar Basireddy, Sai University.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

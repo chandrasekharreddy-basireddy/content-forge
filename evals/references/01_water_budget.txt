@@ -1,0 +1,7 @@
+A municipal water budget has four stages: demand estimation by connection
+category, supply estimation from reservoir inflow, reconciliation of the two
+through restrictions or reserves, and publication. Operating and capital costs
+are reported separately because they are funded differently, and mixing them
+hides tariff shortfalls. Non-revenue water and cost per kilolitre delivered are
+the two figures that matter most, and the budget is revised twice a year - once
+technically, once politically.

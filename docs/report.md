@@ -247,6 +247,22 @@ nothing.]
 | … | | | | | | |
 | **mean** | | | | | | |
 
+### Critic calibration
+
+A critic that scores everything 5 is decoration, and "it scored 5" is not
+evidence either way — a good draft deserves a 5. So the critic is tested the
+only way that settles it: generate a summary, score it, corrupt it in a way a
+reader would catch, and score it again.
+
+`evals/critic_test.py` does exactly that, with two corruptions — a changed
+number the source contradicts, and an invented statistic that appears nowhere
+in the document. If the second score is not lower than the first, the critic is
+not reading the source.
+
+[FILL: the four scores from your run, and one defect the critic named. This is
+the strongest single piece of evidence in the report, because it measures the
+agentic claim instead of asserting it.]
+
 ### What the numbers do not say
 
 ROUGE-L rewards copying the reference's words and is a weak proxy for a good

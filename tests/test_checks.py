@@ -7,6 +7,7 @@ because a measured run found an invented figure and still scored the draft 4/5.
 
 from pipeline import agents, checks, config
 
+
 def long_summary(text: str) -> dict:
     """A summary of realistic length, so the length check does not fire.
 

@@ -259,9 +259,35 @@ number the source contradicts, and an invented statistic that appears nowhere
 in the document. If the second score is not lower than the first, the critic is
 not reading the source.
 
-[FILL: the four scores from your run, and one defect the critic named. This is
-the strongest single piece of evidence in the report, because it measures the
-agentic claim instead of asserting it.]
+Measured on `04_solar_power_in_india.txt`:
+
+| Draft | Score | Defects named |
+|---|---|---|
+| Honest | 5 / 5 | 0 |
+| One digit of a year changed (`2010s` → `9010s`) | 3 / 5 | 5 |
+| An invented statistic appended (`capacity fell by 42% in 2024`) | 4 / 5 | 2 |
+
+The critic discriminated: it lowered its score for both corruptions and quoted
+the offending text in each case. That is the evidence for the agentic claim,
+and it is measured rather than asserted.
+
+It also exposed two weaknesses, which are recorded here rather than smoothed
+over:
+
+1. **The invented statistic scored 4, not 2.** The rubric said an unsourced
+   number caps the score at 2; the critic found the fabrication and still gave
+   it a 4. A scoring guide the model can drift from is not a rule. The rubric
+   was rewritten as a decision procedure — four steps, first match decides the
+   score — and the cap moved to step 1.
+2. **The defect list was padded.** Two of the five defects in the changed-digit
+   case were not defects: one line raised a concern and dismissed it in the
+   same sentence, another complained about coverage the output type never asked
+   for. The prompt now says one line per defect, only what you would defend to
+   the author, and five at most.
+
+[FILL: re-run `python evals/critic_test.py` after those prompt changes and put
+the new scores beside these. A before-and-after pair is worth more than either
+number alone.]
 
 ### What the numbers do not say
 

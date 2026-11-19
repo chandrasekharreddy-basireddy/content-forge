@@ -62,15 +62,31 @@ def summarise(text: str, call) -> tuple[str, dict]:
     return str(draft.get("summary", "")), draft
 
 
-def corrupt_number(text: str) -> str:
-    """Change one digit of one number, so the source contradicts the draft."""
-    match = re.search(r"\d", text)
+def corrupt_number(text: str) -> tuple[str, str, str]:
+    """Change one digit of a substantive number. Returns (text, before, after).
+
+    It prefers a figure with a unit - "174.55 GW", "14%", "2,245 MW" - because
+    changing a year is close to a typo, and a typo is the easy case. A changed
+    quantity is what would actually mislead a reader.
+    """
+    patterns = [
+        r"\d[\d,.]*\s?(?:GW|MW|kW|%|percent|tonnes?|crore|lakh|km|sq km)",
+        r"\d[\d,.]*",
+    ]
+    match = None
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            break
     if not match:
-        return text + INVENTED
+        return text + INVENTED, "nothing", "an invented statistic"
+
+    before = match.group(0)
     index = match.start()
     original = text[index]
     replacement = "9" if original != "9" else "1"
-    return text[:index] + replacement + text[index + 1 :]
+    after = replacement + before[1:]
+    return text[:index] + after + text[index + len(before) :], before, after
 
 
 def score(draft: dict, source: str, call) -> dict:
@@ -112,12 +128,14 @@ def main() -> int:
 
     results = {}
 
-    # Corruption 1: a number the source contradicts.
+    # Corruption 1: a figure the source contradicts.
+    changed_text, before, after = corrupt_number(text)
     changed = dict(draft)
-    changed["summary"] = corrupt_number(text)
+    changed["summary"] = changed_text
     first = score(changed, source, call)
-    results["a changed number"] = first
-    print(f"\nchanged number    : {first['score']}/5, {len(first['defects'])} defects")
+    results["a changed figure"] = first
+    print(f"\nchanged figure    : {before!r} -> {after!r} "
+          f"(scored {first['score']}/5, {len(first['defects'])} defects)")
     for defect in first["defects"]:
         print(f"    - {defect}")
 

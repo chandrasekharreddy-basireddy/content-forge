@@ -15,6 +15,12 @@ venv/
 # Data and generated files
 data/
 outputs/
+
+# Your own test documents. A PDF you did not write must never reach the repo:
+# it is either copyrighted or licence-encumbered, and a commit is forever.
+samples/
+input/
+*.pdf
 *.db
 *.sqlite3
 evals/results.csv

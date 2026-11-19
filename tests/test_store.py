@@ -159,3 +159,21 @@ def test_the_cli_paths_can_be_printed_relative_to_the_project():
 
     assert config.OUTPUT_DIR.is_relative_to(config.ROOT)
     assert config.DB_PATH.is_relative_to(config.ROOT)
+
+
+def test_env_file_wins_over_a_stale_shell_variable(tmp_path, monkeypatch):
+    """A SARVAM_API_KEY left in a shell session must not shadow .env.
+
+    python-dotenv defaults to the opposite, which made a replaced key look
+    unchanged: you edit the file, the app keeps sending the old value.
+    """
+    import os
+
+    from dotenv import load_dotenv
+
+    env_file = tmp_path / ".env"
+    env_file.write_text("SARVAM_API_KEY=sk_from_the_file\n", encoding="utf-8")
+
+    monkeypatch.setenv("SARVAM_API_KEY", "sk_from_the_shell")
+    load_dotenv(env_file, override=True)
+    assert os.environ["SARVAM_API_KEY"] == "sk_from_the_file"

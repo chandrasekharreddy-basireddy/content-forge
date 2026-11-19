@@ -17,11 +17,17 @@ a byte-order mark turning the first variable name into "\ufeffSARVAM_API_KEY",
 and a key pasted with its surrounding quotes.
 """
 
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+# Captured BEFORE the pipeline import: config.py loads .env with override=True,
+# which replaces os.environ["SARVAM_API_KEY"] with the file's value. Reading it
+# afterwards would compare the file with itself and always agree.
+SHELL_KEY = os.environ.get("SARVAM_API_KEY", "")
 
 from pipeline import config, llm  # noqa: E402
 
@@ -69,6 +75,57 @@ def check_encoding(env: Path) -> None:
         say(OK, ".env has no byte-order mark")
 
 
+def fingerprint_of(key: str) -> str:
+    """Eight hex characters derived from a key, revealing nothing about it."""
+    import hashlib
+
+    return hashlib.sha256(key.encode()).hexdigest()[:8] if key else "-"
+
+
+def read_key_from_file(env_path: Path) -> str:
+    """The raw value in the file, without going through config or dotenv."""
+    if not env_path.exists():
+        return ""
+    for line in env_path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("SARVAM_API_KEY="):
+            return stripped.split("=", 1)[1].strip().strip("'\"").strip()
+    return ""
+
+
+def check_source(env_path: Path) -> None:
+    """Which value is actually in use: the file, or the shell?
+
+    This answers "did my edit take effect?". A stale SARVAM_API_KEY in the
+    shell used to win over .env, so the key could be replaced in the file and
+    the app would keep sending the old one.
+    """
+    from_file = read_key_from_file(env_path)
+    from_shell = SHELL_KEY
+    effective = config.SARVAM_API_KEY
+
+    print("where the key comes from:")
+    if from_file:
+        print(f"  .env file : {len(from_file)} characters, fingerprint "
+              f"{fingerprint_of(from_file)}")
+    else:
+        print("  .env file : no SARVAM_API_KEY line found")
+    if from_shell:
+        print(f"  the shell : {len(from_shell)} characters, fingerprint "
+              f"{fingerprint_of(from_shell)}  (set in this session)")
+    else:
+        print("  the shell : not set")
+    print(f"  in use    : {len(effective)} characters, fingerprint "
+          f"{fingerprint_of(effective)}")
+
+    if from_file and from_shell and from_file != from_shell:
+        say(WARN, "the shell and the file disagree. .env wins now, but the "
+                  "variable is still set in this window: run "
+                  "Remove-Item Env:SARVAM_API_KEY, or open a new window")
+    if from_file and effective != from_file:
+        say(FAIL, "the key in use is NOT the key in .env - something overrides it")
+
+
 def check_key() -> str:
     """2b. The key must be non-empty and clean."""
     global problems
@@ -106,11 +163,8 @@ def check_key() -> str:
     # A fingerprint, so you can tell whether the key in .env actually changed
     # between runs without either of us seeing the key itself. Same fingerprint
     # twice means the edit never reached the file.
-    import hashlib
-
-    fingerprint = hashlib.sha256(key.encode()).hexdigest()[:8]
     say(OK, f"key loaded: {len(key)} characters, starts {key[:4]}..., "
-            f"fingerprint {fingerprint}")
+            f"fingerprint {fingerprint_of(key)}")
     if len(key) < 20:
         problems += 1
         say(FAIL, "that is shorter than any real key - did you paste all of it?")
@@ -246,6 +300,7 @@ def main() -> int:
     print("Content Forge - setup check\n")
     env = check_env_file()
     check_encoding(env)
+    check_source(env)
     print()
     key = check_key()
     print()

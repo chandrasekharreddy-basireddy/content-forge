@@ -14,7 +14,14 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parent.parent
 
 # Load .env if it exists. If it does not, the defaults below are used.
-load_dotenv(ROOT / ".env")
+#
+# override=True is deliberate. python-dotenv's default is to let an existing
+# OS environment variable win, which means a SARVAM_API_KEY left over in a
+# shell session silently shadows the .env file - you edit the file, nothing
+# changes, and the error stays identical. The README says the key lives in
+# .env, so .env is the source of truth. Deployments that set real environment
+# variables (Render, Streamlit Cloud) have no .env file, so nothing is lost.
+load_dotenv(ROOT / ".env", override=True)
 
 
 def _path(name: str, default: str) -> Path:

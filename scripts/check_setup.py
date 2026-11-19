@@ -127,6 +127,35 @@ def check_models() -> None:
             say(WARN, f"fix: set {role} in .env to one of the ids above")
 
 
+def check_auth_variants(key: str) -> None:
+    """Try the key three ways, to separate a bad key from a bad header.
+
+    Our client sends both headers at once. If the key is good but one of the
+    headers upsets the gateway, this is the test that shows it: exactly one of
+    these three lines will come back 200.
+    """
+    import requests
+
+    print("header variants against GET /v2/models:")
+    variants = {
+        "api-subscription-key only": {"api-subscription-key": key},
+        "Authorization: Bearer only": {"Authorization": f"Bearer {key}"},
+        "both (what the app sends)": {
+            "api-subscription-key": key,
+            "Authorization": f"Bearer {key}",
+        },
+    }
+    for label, headers in variants.items():
+        try:
+            response = requests.get(config.MODELS_URL, headers=headers, timeout=30)
+            detail = ""
+            if response.status_code != 200:
+                detail = "  " + response.text[:90].replace("\n", " ")
+            print(f"  {response.status_code}  {label}{detail}")
+        except requests.RequestException as exc:
+            print(f"  ---  {label}  (network: {exc})")
+
+
 def check_paths() -> None:
     """5. Relative paths in .env broke a run on Windows; make sure they are not."""
     global problems
@@ -139,12 +168,16 @@ def check_paths() -> None:
 
 
 def main() -> int:
+    raw = "--raw" in sys.argv
     print("Content Forge - setup check\n")
     env = check_env_file()
     check_encoding(env)
     print()
     key = check_key()
     print()
+    if key and raw:
+        check_auth_variants(key)
+        print()
     if key:
         check_models()
     print()

@@ -153,7 +153,13 @@ def length_defects(output: str, draft) -> list[str]:
     if output == "summary":
         prose = str(draft.get("summary", ""))
         words = len(prose.split())
+        bullets = draft.get("bullets")
         low, high = SUMMARY_WORDS
+        # A list document legitimately needs one bullet per item, and one bullet
+        # per item needs room. Judging it by the prose limit alone is what made
+        # a ten-project summary "a dump".
+        if isinstance(bullets, list) and len(bullets) > 7:
+            high = 320
         if words > high:
             defects.append(
                 f"the summary is {words} words; it was asked for 120-180, and "
@@ -162,11 +168,9 @@ def length_defects(output: str, draft) -> list[str]:
         elif words and words < low:
             defects.append(f"the summary is {words} words, too short to be useful")
 
-        bullets = draft.get("bullets")
-        if isinstance(bullets, list) and len(bullets) > 8:
+        if isinstance(bullets, list) and len(bullets) > 10:
             defects.append(
-                f"there are {len(bullets)} bullets; five to seven is a summary, "
-                "more is a transcript"
+                f"there are {len(bullets)} bullets; ten is the limit even for a list"
             )
 
     elif output == "quiz":

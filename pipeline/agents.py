@@ -37,11 +37,11 @@ OUTPUT_RULES: dict[str, str] = {
         "- bullets: 4-7 one-line takeaways, each a full idea, not a fragment.\n"
         "- key_terms: 4-8 terms or names the reader should remember, as written "
         "in the source.\n"
-        "- If the source is a LIST of items, the summary must account for every "
-        "item - name the range and say how many there are - and the bullets must "
-        "not stop part-way through without saying so. A summary of ten projects "
-        "whose bullets cover the first four is an incomplete summary, not a "
-        "concise one.\n"
+        "- If the source is a LIST of more than six items, the rules above relax: "
+        "write 150-260 words and one bullet per item, up to ten bullets. Say how "
+        "many items there are. A summary of ten projects whose bullets cover the "
+        "first four is incomplete, not concise - but do not turn it into a "
+        "transcript either.\n"
         "- If the source is a table, treat each row as one item and say what the "
         "columns are."
     ),
@@ -86,7 +86,13 @@ OUTPUT_RULES: dict[str, str] = {
 # the critic correctly - but wrongly - called it a hallucination. The writer's
 # context is capped at 7,000 characters, so 12,000 leaves headroom.
 SOURCE_LIMIT = 12_000
-DRAFT_LIMIT = 8_000
+
+# The draft limit must be generous: a ten-question quiz with explanations ran to
+# about 8,000 characters and was cut off mid-object, so the critic saw an
+# unfinished JSON and reported "the draft only contains one question". It then
+# failed a valid quiz for two repair rounds. 24,000 characters is still nothing
+# against a 128k-token context.
+DRAFT_LIMIT = 24_000
 
 # The plan is not a user-facing output, so its schema lives here rather than
 # in schemas.py.

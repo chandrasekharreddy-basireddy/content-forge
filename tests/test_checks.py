@@ -188,3 +188,14 @@ def test_a_changed_year_is_still_caught():
 
 def test_a_plain_small_number_must_appear_exactly():
     assert checks.unsourced_numbers({"s": "it fell 4 points"}, "it fell 4.04 points") == ["4"]
+
+
+def test_a_list_summary_may_run_longer():
+    """Ten items need ten bullets and more words; that is not a dump."""
+    draft = {"summary": "word " * 280, "bullets": ["item"] * 10}
+    assert checks.length_defects("summary", draft) == []
+
+
+def test_eleven_bullets_is_still_too_many():
+    draft = {"summary": "word " * 150, "bullets": ["item"] * 11}
+    assert any("bullets" in defect for defect in checks.length_defects("summary", draft))

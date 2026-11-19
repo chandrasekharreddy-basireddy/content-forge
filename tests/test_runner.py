@@ -271,3 +271,33 @@ def test_the_critic_sees_as_much_source_as_the_writer(sample_text):
 
     agents.critique("summary", {"summary": "x"}, long_source, call=capture)
     assert "THE-LAST-FACT-IS-HERE" in seen["user"]
+
+
+def test_a_long_draft_is_not_truncated_before_the_critic_sees_it():
+    """A ten-question quiz was cut at 8,000 characters and called one question."""
+    from pipeline import agents
+
+    seen = {}
+
+    def capture(messages, **kwargs):
+        seen["user"] = messages[-1]["content"]
+        return (
+            '{"score": 5, "verdict": "pass", "defects": [], "reason": "ok"}',
+            {"model": "fake", "prompt_tokens": 1, "completion_tokens": 1, "cost_inr": 0},
+        )
+
+    quiz = {
+        "questions": [
+            {
+                "question": f"Question number {index} about the tenth project in this list?",
+                "options": ["a", "b", "c", "d"],
+                "answer_index": 0,
+                "explanation": "Because the source says so, in as many words as it takes.",
+            }
+            for index in range(10)
+        ]
+    }
+    assert len(str(quiz)) > 2000
+
+    agents.critique("quiz", quiz, "source", call=capture)
+    assert "Question number 9" in seen["user"]

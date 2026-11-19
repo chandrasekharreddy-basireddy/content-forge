@@ -84,14 +84,18 @@ def _appears(draft: tuple[str, float, bool], source: list[tuple[str, float, bool
 
 
 def text_of(draft) -> str:
-    """All the string values in a draft, flattened, so keys are not searched."""
+    """All the STRING values in a draft, flattened.
+
+    Keys are structure, not content. So are numbers that are not prose:
+    `"answer_index": 0` is a position in a list, not a claim about the world,
+    and treating it as one made every quiz with a first-option answer look
+    fabricated. Only strings are searched.
+    """
     if isinstance(draft, dict):
         return " ".join(text_of(value) for value in draft.values())
     if isinstance(draft, list):
         return " ".join(text_of(item) for item in draft)
-    if isinstance(draft, str):
-        return draft
-    return str(draft) if draft is not None else ""
+    return draft if isinstance(draft, str) else ""
 
 
 def unsourced_numbers(draft, source: str) -> list[str]:
@@ -178,15 +182,27 @@ def length_defects(output: str, draft) -> list[str]:
 
     elif output == "quiz":
         questions = draft.get("questions")
-        if isinstance(questions, list) and len(questions) > 10:
-            defects.append(
-                f"there are {len(questions)} questions; eight is the deep setting"
-            )
+        if isinstance(questions, list):
+            if len(questions) < 3:
+                defects.append(
+                    f"there is only {len(questions)} question; a quiz needs at "
+                    "least three, and five at standard depth"
+                )
+            elif len(questions) > 10:
+                defects.append(
+                    f"there are {len(questions)} questions; eight is the deep setting"
+                )
 
     elif output == "flashcards":
         cards = draft.get("cards")
-        if isinstance(cards, list) and len(cards) > 14:
-            defects.append(f"there are {len(cards)} cards; twelve is the deep setting")
+        if isinstance(cards, list):
+            if len(cards) > 14:
+                defects.append(
+                    f"there are {len(cards)} cards; cut it to eight. Twelve is the "
+                    "deep setting and fourteen is the limit"
+                )
+            elif len(cards) < 4:
+                defects.append(f"there are only {len(cards)} cards; four is the minimum")
 
     return defects
 

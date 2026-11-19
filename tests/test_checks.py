@@ -32,7 +32,8 @@ def test_numbers_are_found_and_normalised():
 
 def test_a_number_in_the_source_is_not_a_defect():
     draft = long_summary("Capacity reached 174.55 GW in October 2026.")
-    assert checks.unsourced_numbers(draft, SOURCE) == []
+    source = "Project 1 is the Academia-Industry Skill Mapping and Placement Portal."
+    assert checks.unsourced_numbers(draft, source) == []
 
 
 def test_an_invented_number_is_named():
@@ -199,3 +200,29 @@ def test_a_list_summary_may_run_longer():
 def test_eleven_bullets_is_still_too_many():
     draft = {"summary": "word " * 150, "bullets": ["item"] * 11}
     assert any("bullets" in defect for defect in checks.length_defects("summary", draft))
+
+
+def test_a_quiz_answer_index_is_not_treated_as_a_claim():
+    """`"answer_index": 0` is a position, not a number in the source."""
+    draft = {
+        "questions": [
+            {
+                "question": "What is Project 1 called?",
+                "options": ["Portal", "Assistant", "Platform", "Engine"],
+                "answer_index": 0,
+                "explanation": "The source names the portal first.",
+            }
+        ]
+    }
+    assert checks.unsourced_numbers(draft, SOURCE) == []
+
+
+def test_a_one_question_quiz_is_a_defect():
+    draft = {"questions": [{"question": "q", "options": ["a", "b", "c", "d"],
+                            "answer_index": 0, "explanation": "e"}]}
+    assert any("at least three" in defect for defect in checks.length_defects("quiz", draft))
+
+
+def test_twenty_flashcards_is_a_defect():
+    draft = {"cards": [{"front": f"f{i}", "back": f"b{i}"} for i in range(20)]}
+    assert any("cut it to eight" in defect for defect in checks.length_defects("flashcards", draft))

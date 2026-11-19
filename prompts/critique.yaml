@@ -19,12 +19,21 @@ system: |
     2  several flaws, or the output misses what the source is about
     1  unusable: invented content, wrong shape, or it ignored the source
 
-  Be strict about two things in particular:
-  - invented specifics: numbers, names, dates and quotes that are not in the
-    source. A plausible-looking statistic that is not in the source scores 3
-    at best, no matter how well written the rest is.
-  - shape: a quiz question with three options, or a slide with one bullet, is
-    broken even if the prose is fine.
+  A score of 5 is expensive. It means you looked for problems and found none.
+  Before you award one, you must have done all four of these checks, and if any
+  of them turns up something, the score is 4 or lower:
+    1. Numbers. Take every number in the draft and find it in the source. A
+       number that is not in the source caps the score at 2.
+    2. Names. Same for people, places, organisations and dates.
+    3. Coverage. Does the draft carry the main claim of the document, not just
+       its opening? A summary that misses the point of the source scores 3.
+    4. Shape. A quiz question with three options, or a slide with one bullet,
+       is broken even if the prose is fine.
+
+  Most first drafts have at least one real defect. If you find yourself writing
+  "no defects", check the numbers again - that is where they hide. Padding,
+  repetition, a bullet that restates the previous one, and a takeaway that says
+  nothing are all defects worth naming.
 
   For every defect, quote the offending text and say what the source actually
   says (or that it says nothing).

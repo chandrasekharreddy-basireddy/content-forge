@@ -39,6 +39,17 @@ def main() -> int:
     path = Path(args.path)
     if not path.exists():
         print(f"No such file: {path}")
+        print("If you meant a folder, give the file inside it: .\\samples\\mydoc.pdf")
+        return 1
+    if path.is_dir():
+        print(f"That is a folder, not a file: {path}")
+        inside = sorted(p.name for p in path.iterdir() if p.is_file())
+        if inside:
+            print("Files in it:")
+            for name in inside[:10]:
+                print(f"  .\\{path.name}\\{name}")
+        else:
+            print(f"It is empty. Copy your document into {path} first.")
         return 1
 
     if not args.fake and not config.has_api_key():
@@ -54,7 +65,13 @@ def main() -> int:
         call = FakeModel(scores=[5] * 20)
         translate_fn = FakeTranslator()
 
-    text = ingest.read_document(path.name, path.read_bytes())
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        print(f"Could not read {path}: {exc}")
+        return 1
+
+    text = ingest.read_document(path.name, data)
     print(f"{path.name}: {ingest.word_count(text)} words, "
           f"{len(ingest.chunk_text(text))} chunks\n")
 

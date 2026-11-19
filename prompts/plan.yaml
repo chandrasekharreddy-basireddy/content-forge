@@ -15,6 +15,10 @@ system: |
   - A very short document cannot support slides. A document with no dates,
     numbers or named entities cannot support a good quiz. Say so by leaving
     those outputs out.
+  - Always include summary. A document of a thousand words or more with real
+    facts in it also supports quiz and flashcards; produce them rather than
+    offering only a summary, which leaves the user doing the work themselves.
+    A document of a few hundred words gets summary and nothing else.
   - "depth" is one of: short, standard, deep.
       short    = the source is thin; keep each output small
       standard = normal article or chapter

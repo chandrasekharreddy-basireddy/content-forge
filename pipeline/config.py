@@ -83,6 +83,13 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 CHUNK_SIZE = int(_num("CHUNK_SIZE", 1200))
 CHUNK_OVERLAP = int(_num("CHUNK_OVERLAP", 150))
 
+# Extraction is done on groups of chunks, not one call per chunk. A 3,000-word
+# document fits in a single call, and spending 21 calls on it is money and rate
+# limit for nothing. Groups are packed up to this size, and if there are still
+# more groups than the cap, they are sampled evenly across the document.
+EXTRACT_WINDOW = int(_num("EXTRACT_WINDOW", 6000))
+MAX_EXTRACT_CALLS = int(_num("MAX_EXTRACT_CALLS", 6))
+
 # The critic gives a score out of 5. At or above PASS_SCORE we accept the
 # draft. Below it, we send it back with the defects, at most MAX_REPAIRS times.
 PASS_SCORE = _num("PASS_SCORE", 4)

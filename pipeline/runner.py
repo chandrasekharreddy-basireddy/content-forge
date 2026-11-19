@@ -76,18 +76,21 @@ def run(
     words = ingest.word_count(text)
     record("chunk", "-", 0, {}, f"{len(chunks)} chunks, {words} words")
 
-    # --- Step 2: reduce each chunk to facts (the map half) -----------------
+    # --- Step 2: reduce the document to facts (the map half) ---------------
+    # Groups of chunks, not one call per chunk: a short document then costs one
+    # call instead of twenty, which matters on a free tier's rate limit.
+    groups = group_chunks(chunks)
     facts: list[str] = []
     numbers: list[str] = []
-    for index, chunk in enumerate(chunks, start=1):
-        emit("extract", f"Reading part {index} of {len(chunks)}")
+    for index, chunk in enumerate(groups, start=1):
+        emit("extract", f"Reading part {index} of {len(groups)}")
         step_started = time.perf_counter()
         try:
-            result, usage = agents.extract(chunk, index, len(chunks), call=call)
+            result, usage = agents.extract(chunk, index, len(groups), call=call)
             facts.extend(result["facts"])
             numbers.extend(result["numbers"])
             record(
-                f"extract {index}/{len(chunks)}",
+                f"extract {index}/{len(groups)}",
                 "fast",
                 _ms(step_started),
                 usage,
@@ -96,7 +99,7 @@ def run(
         except Exception as exc:  # noqa: BLE001 - a bad step must not end the run
             # Losing one chunk's facts is survivable; losing the run is not.
             record(
-                f"extract {index}/{len(chunks)}",
+                f"extract {index}/{len(groups)}",
                 "fast",
                 _ms(step_started),
                 {},
@@ -328,6 +331,44 @@ def _failed(output: str, error: str) -> dict:
         "status": "failed",
         "error": error,
     }
+
+
+def group_chunks(
+    chunks: list[str],
+    window: int | None = None,
+    max_groups: int | None = None,
+) -> list[str]:
+    """Pack chunks into a few big groups for extraction.
+
+    One call per chunk is wasteful on a short document: 3,000 words fit in a
+    single call. Groups are packed up to "window" characters, and if there are
+    still more than "max_groups" of them, evenly spaced groups are kept so the
+    beginning, middle and end of a long document are all represented.
+    """
+    window = window or config.EXTRACT_WINDOW
+    max_groups = max_groups or config.MAX_EXTRACT_CALLS
+
+    groups: list[str] = []
+    current = ""
+    for chunk in chunks:
+        candidate = f"{current}\n\n{chunk}" if current else chunk
+        if len(candidate) <= window:
+            current = candidate
+        else:
+            if current:
+                groups.append(current)
+            current = chunk
+    if current:
+        groups.append(current)
+
+    if len(groups) > max_groups and max_groups > 1:
+        # Evenly spaced picks, always including the first and the last group,
+        # so a long document never loses its conclusion.
+        last = len(groups) - 1
+        picks = [round(index * last / (max_groups - 1)) for index in range(max_groups)]
+        groups = [groups[index] for index in dict.fromkeys(picks)]
+
+    return groups
 
 
 def build_context(chunks: list[str], facts: list[str], numbers: list[str]) -> str:

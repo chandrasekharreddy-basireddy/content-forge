@@ -167,3 +167,27 @@ def test_the_writer_sees_the_facts_first():
     context = runner.build_context(["RAW " * 500], ["A fact."], ["14%"])
     assert context.index("FACTS FROM THE DOCUMENT") < context.index("SOURCE TEXT")
     assert len(context) <= runner.MAX_CONTEXT_CHARS
+
+
+def test_a_short_document_costs_one_extract_call(sample_text):
+    """3,000 words must not become twenty model calls: groups, not chunks."""
+    groups = runner.group_chunks(["x" * 1000] * 3)
+    assert len(groups) == 1
+    assert len(groups[0]) == 1000 * 3 + 4  # joined with a blank line
+
+
+def test_a_long_document_is_capped_but_still_covered():
+    """Twenty chunks become at most six calls, sampled across the document."""
+    chunks = [f"part{index} " + "y" * 1000 for index in range(20)]
+    groups = runner.group_chunks(chunks)
+    assert len(groups) <= 6
+    assert "part0" in groups[0]
+    assert "part19" in groups[-1]  # the end is represented, not truncated away
+
+
+def test_a_long_document_does_not_lose_its_first_and_last_chunk():
+    chunks = [f"chunk-{index}" for index in range(50)]
+    groups = runner.group_chunks(chunks, window=20, max_groups=3)
+    joined = " ".join(groups)
+    assert "chunk-0" in joined
+    assert "chunk-49" in joined

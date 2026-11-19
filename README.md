@@ -45,9 +45,12 @@ pipeline from a single prompt in a text box:
    source, and anything below 4 goes back to the writer with the named defects,
    twice at most. The score, the defects and the number of rounds are stored with
    every run and shown in the UI. A wrapper has no second opinion.
-2. **Map-reduce over chunks.** A long document never goes into one prompt. Each
-   chunk is reduced to its facts and numbers first, and every writer works from
-   that same evidence, so all five outputs agree with each other.
+2. **Map-reduce over chunks.** A long document never goes into one prompt. The
+   chunks are packed into a few groups, each group is reduced to its facts and
+   numbers, and every writer works from that same evidence, so all five outputs
+   agree with each other. A 3,000-word document costs one extraction call, not
+   twenty; a 200-page one is capped at six, sampled evenly so the end of the
+   document is never the part that gets dropped.
 3. **A machine-checkable contract.** Each output has a JSON Schema sent as
    `response_format`, plus a hand-written validator. A quiz with three options is
    caught in code, not by a human reading the screen.
@@ -61,7 +64,7 @@ pipeline from a single prompt in a text box:
 upload
   │
   ├─ chunk      ingest.py       overlap-split into ~1,200-character pieces
-  ├─ extract    agents.py       each chunk → facts and exact numbers   (map)
+  ├─ extract    agents.py       chunk groups → facts and exact numbers (map)
   ├─ plan       agents.py       which outputs this document supports, how deep
   ├─ write      agents.py       one draft per output, from facts + source
   ├─ critique   agents.py       score /5 against the source, name the defects
@@ -79,7 +82,7 @@ part of that loop.
 
 | File | Lines | What it is |
 |---|---|---|
-| `pipeline/runner.py` | ~120 | The workflow: chunk → extract → plan → write → critique → repair |
+| `pipeline/runner.py` | ~190 | The workflow: chunk → extract → plan → write → critique → repair |
 | `pipeline/llm.py` | ~230 | The only file that talks to Sarvam |
 | `pipeline/agents.py` | ~200 | Four functions, four prompts |
 | `pipeline/schemas.py` | ~290 | The contract for every output type |
@@ -127,7 +130,7 @@ python -m pytest
 ### Tests
 
 ```bash
-python -m pytest        # 84 tests, no network, no API key
+python -m pytest        # 87 tests, no network, no API key
 python -m ruff check .  # lint
 ```
 
@@ -284,7 +287,7 @@ content-forge/
 ├── prompts/               five YAML prompts
 ├── web/                   landing page: index.html, styles.css, app.js
 ├── evals/                 run_eval.py, rouge.py, testset/, references/
-├── tests/                 84 tests, plus fakes.py
+├── tests/                 87 tests, plus fakes.py
 ├── scripts/cli.py         terminal entry point
 ├── sql/schema.sql         Supabase table and view
 ├── powerbi/measures.dax   dashboard measures

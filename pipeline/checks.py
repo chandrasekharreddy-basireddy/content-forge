@@ -162,8 +162,11 @@ def length_defects(output: str, draft) -> list[str]:
             high = 320
         if words > high:
             defects.append(
-                f"the summary is {words} words; it was asked for 120-180, and "
-                f"anything over {high} is a dump rather than a summary"
+                f"the summary is {words} words; cut it to at most {high}. It was "
+                "asked for 120-180 and anything over that is a dump rather than a "
+                "summary. If the source is a list, stop walking it item by item: "
+                "group the items by theme, say how many fall in each group, and "
+                "leave the item-level detail to the bullets"
             )
         elif words and words < low:
             defects.append(f"the summary is {words} words, too short to be useful")

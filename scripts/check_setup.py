@@ -103,7 +103,14 @@ def check_key() -> str:
         say(WARN, "fix: delete the key in .env and paste it again by hand, or "
                   "retype it - a smart quote or zero-width space looks identical")
 
-    say(OK, f"key loaded: {len(key)} characters, starts {key[:4]}...")
+    # A fingerprint, so you can tell whether the key in .env actually changed
+    # between runs without either of us seeing the key itself. Same fingerprint
+    # twice means the edit never reached the file.
+    import hashlib
+
+    fingerprint = hashlib.sha256(key.encode()).hexdigest()[:8]
+    say(OK, f"key loaded: {len(key)} characters, starts {key[:4]}..., "
+            f"fingerprint {fingerprint}")
     if len(key) < 20:
         problems += 1
         say(FAIL, "that is shorter than any real key - did you paste all of it?")

@@ -36,7 +36,14 @@ OUTPUT_RULES: dict[str, str] = {
         "- summary: 120-180 words of flowing prose, no bullet points inside it.\n"
         "- bullets: 4-7 one-line takeaways, each a full idea, not a fragment.\n"
         "- key_terms: 4-8 terms or names the reader should remember, as written "
-        "in the source."
+        "in the source.\n"
+        "- If the source is a LIST of items, the summary must account for every "
+        "item - name the range and say how many there are - and the bullets must "
+        "not stop part-way through without saying so. A summary of ten projects "
+        "whose bullets cover the first four is an incomplete summary, not a "
+        "concise one.\n"
+        "- If the source is a table, treat each row as one item and say what the "
+        "columns are."
     ),
     "quiz": (
         "Return {\"questions\": [{\"question\": string, \"options\": [4 strings], "

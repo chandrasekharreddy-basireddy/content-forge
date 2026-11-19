@@ -17,18 +17,70 @@ actually damages generated study material. It does not try to check claims.
 import json
 import re
 
-# A number as it appears in prose: 174.55, 2,245, 14%, 2026, 11th.
-NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+# A number as it appears in prose, with an optional magnitude suffix:
+# 174.55, 2,245, 14%, 78K, 2.90M, 3 lakh.
+NUMBER = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s?(k|m|b|crore|lakh|l)?\b", re.IGNORECASE)
+
+SUFFIX = {
+    "k": 1_000,
+    "m": 1_000_000,
+    "b": 1_000_000_000,
+    "l": 100_000,
+    "lakh": 100_000,
+    "crore": 10_000_000,
+}
 
 
 def numbers_in(text: str) -> set[str]:
     """Every number in a piece of text, normalised so 2,245 and 2245 match."""
-    found = set()
-    for match in NUMBER.findall(text or ""):
-        cleaned = match.replace(",", "").rstrip(".")
-        if cleaned:
-            found.add(cleaned)
+    return {cleaned for cleaned, _value, _suffix in _scan(text)}
+
+
+def _scan(text: str) -> list[tuple[str, float, bool]]:
+    """(as written, value, had a magnitude suffix) for every number in text."""
+    found: list[tuple[str, float, bool]] = []
+    for match in NUMBER.finditer(text or ""):
+        raw = match.group(1)
+        suffix = (match.group(2) or "").lower()
+        cleaned = raw.replace(",", "").rstrip(".")
+        if not cleaned:
+            continue
+        try:
+            value = float(cleaned)
+        except ValueError:
+            continue
+        if suffix in SUFFIX:
+            value *= SUFFIX[suffix]
+        found.append((cleaned, value, bool(suffix)))
     return found
+
+
+def _appears(draft: tuple[str, float, bool], source: list[tuple[str, float, bool]]) -> bool:
+    """Is this draft number present in the source?
+
+    Written exactly, it must appear exactly. Written in a different form -
+    78,000 against 78K, 2.90M against 2,899,158.52 - it is compared by value
+    with a one percent tolerance, because rounding to a magnitude is normal
+    summarising rather than fabrication. The tolerance only applies above a
+    thousand: for small integers one percent is noise, and a draft that says 4
+    must not pass because the source says 4.04.
+    """
+    written, value, had_suffix = draft
+
+    for source_written, _source_value, _source_suffix in source:
+        if source_written == written:
+            return True
+
+    # A plain number is compared only against source numbers that were written
+    # with a magnitude suffix (96000 against 96K). Comparing it against every
+    # source value with a tolerance would let 2006 pass as 2026, which is the
+    # one kind of error a reader notices first.
+    for _written, source_value, source_had_suffix in source:
+        if not had_suffix and not source_had_suffix:
+            continue
+        if source_value and abs(source_value - value) <= max(0.01 * value, 1):
+            return True
+    return False
 
 
 def text_of(draft) -> str:
@@ -47,15 +99,13 @@ def unsourced_numbers(draft, source: str) -> list[str]:
 
     Returns the values, deduplicated, so the defect line can name them.
     """
-    source_numbers = numbers_in(source)
+    source_numbers = _scan(source)
     missing: list[str] = []
-    for value in numbers_in(text_of(draft)):
-        if value in source_numbers:
+    for item in _scan(text_of(draft)):
+        if _appears(item, source_numbers):
             continue
-        # "2026" in the source may be written "2026." or inside a range; the
-        # set already normalises commas, so a plain miss is a real miss.
-        if value not in missing:
-            missing.append(value)
+        if item[0] not in missing:
+            missing.append(item[0])
 
     # Longest first: a fabricated "974.55" is more informative than "9".
     missing.sort(key=len, reverse=True)

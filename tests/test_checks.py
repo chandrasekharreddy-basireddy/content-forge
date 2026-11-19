@@ -169,3 +169,22 @@ def test_the_shape_check_caps_the_score(monkeypatch):
     verdict, _ = agents.critique("summary", draft, SOURCE, call=generous)
     assert verdict["score"] <= 3
     assert any("words" in defect for defect in verdict["defects"])
+
+
+def test_a_magnitude_suffix_matches_the_expanded_figure():
+    """A measured run flagged 78000 and 96000 as invented because the source
+    wrote them 78K and 96K. Rounding to a magnitude is summarising, not lying."""
+    source = "Revenue 2.90M across 96K trips, 78K of them by card."
+    draft = {"summary": "Revenue 2,899,158.52 across 96000 trips, 78000 by card."}
+    assert checks.unsourced_numbers(draft, source) == []
+
+
+def test_a_changed_year_is_still_caught():
+    """Tolerance must not swallow 2006 for 2026 - that is the error a reader sees."""
+    source = "Trip records for January 02, 2026 are in the appendix."
+    draft = {"summary": "Trip records for January 02, 2006 are in the appendix."}
+    assert "2006" in checks.unsourced_numbers(draft, source)
+
+
+def test_a_plain_small_number_must_appear_exactly():
+    assert checks.unsourced_numbers({"s": "it fell 4 points"}, "it fell 4.04 points") == ["4"]

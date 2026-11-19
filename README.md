@@ -193,12 +193,11 @@ in the CLI, and in the `cost_inr` column of every run.
 - **An LLM judge** — faithfulness, coverage and concision out of 5, from
   `prompts/judge.yaml`.
 
-Three sample documents ship in `evals/testset/` with references, so the harness
-can be demonstrated immediately. **They are synthetic placeholders written to
-test the harness, not real sources.** Replace them with 20 documents you did not
-write and are licence-safe to send to a third-party API — your own notes, open
-licence material, government publications — plus 20 human-written reference
-summaries. That is the work, and no tool can do it for you.
+Eleven documents ship in `evals/testset/` with reference summaries, so the
+harness runs immediately: three synthetic samples and eight Wikipedia articles
+under CC BY-SA 4.0, with sources and licences in `evals/testset/manifest.json`.
+**The reference summaries are drafts, not human references** — see
+`evals/README.md` for why that matters and what to do about it.
 
 The numbers currently in `evals/results.csv` come from `--fake`. They prove the
 harness runs. They are not a measurement of the model, and they must not appear
@@ -268,9 +267,9 @@ say so.
 Written down rather than hidden:
 
 - The Power BI file (`.pbix`) is not in the repository. Power BI Desktop is
-  Windows-only, so the file is built locally from the History tab's CSV and the
-  measures in `powerbi/measures.dax` are ready to paste. Everything the dashboard
-  needs is in that CSV.
+  Windows-only, so the file is built locally from the History tab's CSV.
+  `powerbi/BUILD.md` walks through it in forty minutes; the measures are ready
+  to paste.
 - Translation covers the summary only. Translating a whole quiz would mean
   translating values while keeping keys, which is a real piece of work and was
   cut deliberately.
@@ -291,7 +290,10 @@ content-forge/
 ├── scripts/cli.py         terminal entry point
 ├── sql/schema.sql         Supabase table and view
 ├── powerbi/measures.dax   dashboard measures
-├── docs/proposal.md       the five-part project proposal
+├── docs/
+│   ├── proposal.md        the five-part project proposal
+│   ├── report.md          the report, with [FILL] markers for your numbers
+│   └── viva.md            twelve viva questions with answers
 ├── requirements.txt
 └── .env.example
 ```

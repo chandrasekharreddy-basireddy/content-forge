@@ -1,0 +1,66 @@
+[
+  {
+    "file": "04_solar_power_in_india.txt",
+    "title": "Solar power in India",
+    "url": "https://en.wikipedia.org/wiki/Solar_power_in_India",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1334
+  },
+  {
+    "file": "05_kaveri_river_water_dispute.txt",
+    "title": "Kaveri River water dispute",
+    "url": "https://en.wikipedia.org/wiki/Kaveri_River_water_dispute",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1151
+  },
+  {
+    "file": "06_sundarbans.txt",
+    "title": "Sundarbans",
+    "url": "https://en.wikipedia.org/wiki/Sundarbans",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 945
+  },
+  {
+    "file": "07_kolkata_metro.txt",
+    "title": "Kolkata Metro",
+    "url": "https://en.wikipedia.org/wiki/Kolkata_Metro",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1308
+  },
+  {
+    "file": "08_nalanda_mahavihara.txt",
+    "title": "Nalanda mahavihara",
+    "url": "https://en.wikipedia.org/wiki/Nalanda_mahavihara",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1358
+  },
+  {
+    "file": "09_chilika_lake.txt",
+    "title": "Chilika Lake",
+    "url": "https://en.wikipedia.org/wiki/Chilika_Lake",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1350
+  },
+  {
+    "file": "10_indian_railways.txt",
+    "title": "Indian Railways",
+    "url": "https://en.wikipedia.org/wiki/Indian_Railways",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 1291
+  },
+  {
+    "file": "11_unified_payments_interface.txt",
+    "title": "Unified Payments Interface",
+    "url": "https://en.wikipedia.org/wiki/Unified_Payments_Interface",
+    "licence": "CC BY-SA 4.0",
+    "retrieved": "2026-11-19",
+    "words": 998
+  }
+]

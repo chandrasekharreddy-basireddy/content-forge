@@ -301,3 +301,31 @@ def test_a_long_draft_is_not_truncated_before_the_critic_sees_it():
 
     agents.critique("quiz", quiz, "source", call=capture)
     assert "Question number 9" in seen["user"]
+
+
+def test_an_empty_extraction_is_retried_once(sample_text):
+    """The same document produced 20 facts on one run and none on the next."""
+    from fakes import FakeModel, FakeTranslator
+
+    calls = {"n": 0}
+    model = FakeModel(scores=[5, 5, 5, 5])
+
+    def flaky(messages, **kwargs):
+        if "You extract evidence" in messages[0]["content"]:
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return (
+                    '{"facts": [], "numbers": []}',
+                    {"model": "fake", "prompt_tokens": 10, "completion_tokens": 10,
+                     "cost_inr": 0},
+                )
+        return model(messages, **kwargs)
+
+    record = runner.run(
+        "pilot.txt", sample_text, outputs=["summary"], call=flaky,
+        translate_fn=FakeTranslator(),
+    )
+    notes = [row["note"] for row in record["trace"]]
+    assert any("empty first time" in note for note in notes)
+    assert any("3 facts" in note for note in notes)
+    assert record["outputs"]["summary"]["status"] == "ok"

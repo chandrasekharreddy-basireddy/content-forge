@@ -87,6 +87,24 @@ def run(
         step_started = time.perf_counter()
         try:
             result, usage = agents.extract(chunk, index, len(groups), call=call)
+
+            # An empty fact set is not a document with nothing in it, it is the
+            # extractor giving up: the same document has produced 20 facts on one
+            # run and none on the next. Ask once more before accepting it, and
+            # say so in the trace - everything downstream is weaker without facts.
+            if not result["facts"]:
+                retry_started = time.perf_counter()
+                retry, retry_usage = agents.extract(chunk, index, len(groups), call=call)
+                record(
+                    f"extract {index}/{len(groups)} retry",
+                    "fast",
+                    _ms(retry_started),
+                    retry_usage,
+                    f"empty first time, {len(retry['facts'])} facts on retry",
+                )
+                if retry["facts"]:
+                    result, usage = retry, retry_usage
+
             facts.extend(result["facts"])
             numbers.extend(result["numbers"])
             record(

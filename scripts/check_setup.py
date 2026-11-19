@@ -145,14 +145,28 @@ def check_key_live(key: str) -> bool:
         return True
 
     problems += 1
+
+    # 402 and 403 are different problems and need different fixes. A student
+    # on free credits who sees 402 must not go hunting for a new key.
+    if response.status_code == 402:
+        say(FAIL, "the key is fine but the account is out of credits (HTTP 402)")
+        say(WARN, "fix: add credits on Settings > Billing. Retrying will not help,")
+        say(WARN, "and rotating the key will not help either.")
+        return False
+
     say(FAIL, f"/translate rejected the key: HTTP {response.status_code}")
     say(WARN, response.text[:160].replace("\n", " "))
     if response.status_code in (401, 403):
-        say(WARN, "the key itself is not accepted. Check, in this order:")
+        say(WARN, "the key itself is not accepted. Sarvam says 403 with")
+        say(WARN, "invalid_api_key_error means the key is missing, malformed or")
+        say(WARN, "unknown - it is not a credits or rate-limit problem. Check:")
         say(WARN, "  1. it was copied whole, with no invisible characters (see above)")
         say(WARN, "  2. it came from dashboard.sarvam.ai, not apps.sarvam.ai")
-        say(WARN, "  3. the subscription on that account is active")
+        say(WARN, "  3. it belongs to the account you think it does")
         say(WARN, "  4. regenerate the key and try the new one")
+    elif response.status_code == 429:
+        say(WARN, "that is a rate limit, not a bad key: wait and retry. Limits are")
+        say(WARN, "per account, shared by every key.")
     return False
 
 

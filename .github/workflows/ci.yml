@@ -34,6 +34,12 @@ jobs:
       - name: Pipeline smoke test on the fake model
         # Assert the outcome, not just the exit code: a run where every output
         # was flagged still exits 0.
+        #
+        # GROUNDING_CHECK is off here because the fake model invents its quiz
+        # options by design (41%, 4%, 0%), and the code-level number check
+        # correctly flags them. The check itself is tested in tests/test_checks.py.
+        env:
+          GROUNDING_CHECK: "false"
         run: |
           python scripts/cli.py evals/testset/01_water_budget.txt --fake \
             --outputs summary quiz --no-save --no-write | tee smoke.txt

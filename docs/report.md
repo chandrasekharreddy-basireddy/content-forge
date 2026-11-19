@@ -306,10 +306,20 @@ into code: `pipeline/checks.py` looks up every number in the draft against the
 source, and one that is missing caps the score at 2 whatever the model said.
 The model proposes, the code disposes.
 
-[FILL: re-run `python evals/critic_test.py` once more and put the final scores
-here. Three runs, each fixing what the last one exposed, is the honest account
-of how the critic was built — and a better answer than a table that was right
-the first time.]
+The final run, after all four fixes:
+
+| Draft | Score | Defects |
+|---|---|---|
+| Honest | 5 / 5 | 0 |
+| Figure changed (`174.55 GW` → `974.55 GW`) | 2 / 5 | 1 |
+| Invented statistic appended | 2 / 5 | 1 |
+
+Four runs, each fixing what the previous one exposed: a generous rubric, then
+padded defects, then a source window too small for the writer's context, then a
+cap the model would not apply. That sequence is the honest account of how the
+critic was built, and it is a better answer in a viva than a table that was
+right the first time — because the question will be "how do you know it works?",
+not "what did it score?".
 
 ### What the numbers do not say
 

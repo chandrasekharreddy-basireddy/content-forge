@@ -295,9 +295,12 @@ def critique(
     # source does not contain is checkable without judgement, so check it here
     # and let it override.
     if config.GROUNDING_CHECK:
-        unsourced = checks.grounding_defects(draft, source)
-        if unsourced:
-            defects = unsourced + defects
+        # The cap applies whenever an unsourced number exists, whether or not
+        # the critic named it: who reported the problem must not change the
+        # score, only the wording.
+        missing = checks.unsourced_numbers(draft, source)
+        if missing:
+            defects = checks.grounding_defects(draft, source, existing=defects) + defects
             if score > 2:
                 score = 2
             verdict = "revise"

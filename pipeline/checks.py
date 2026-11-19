@@ -62,17 +62,29 @@ def unsourced_numbers(draft, source: str) -> list[str]:
     return missing
 
 
-def grounding_defects(draft, source: str) -> list[str]:
-    """Readable defect lines for unsourced numbers, ready to add to a critique."""
+def defect_line(values: list[str]) -> str:
+    """One readable defect naming the unsourced numbers."""
+    shown = ", ".join(values[:5])
+    return (
+        f'"{shown}" - this number does not appear anywhere in the source document, '
+        "so it is unsourced regardless of how plausible it reads"
+    )
+
+
+def grounding_defects(draft, source: str, existing: list[str] | None = None) -> list[str]:
+    """Defect lines for unsourced numbers, skipping ones already reported.
+
+    The critic often names the same figure itself, and a review that lists one
+    problem twice reads as two problems. Values already mentioned in the
+    critic's own defects are left out here.
+    """
     missing = unsourced_numbers(draft, source)
     if not missing:
         return []
 
-    shown = ", ".join(missing[:5])
-    return [
-        f'"{shown}" - this number does not appear anywhere in the source document, '
-        "so it is unsourced regardless of how plausible it reads"
-    ]
+    already = " ".join(existing or [])
+    fresh = [value for value in missing if value not in already]
+    return [defect_line(fresh)] if fresh else []
 
 
 def summarise_for_trace(draft) -> str:

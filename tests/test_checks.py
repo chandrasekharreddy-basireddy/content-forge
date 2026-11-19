@@ -90,3 +90,38 @@ def test_the_switch_can_turn_it_off(monkeypatch):
         "summary", {"summary": "Capacity reached 974.55 GW."}, SOURCE, call=generous
     )
     assert verdict["score"] == 5
+
+
+def test_a_figure_the_critic_already_named_is_not_repeated(monkeypatch):
+    """One problem should read as one defect, not two."""
+    monkeypatch.setattr(config, "GROUNDING_CHECK", True)
+
+    def critic(messages, **kwargs):
+        return (
+            '{"score": 3, "verdict": "revise", "defects": [{"quote": "974.55 GWAC",'
+            ' "problem": "the source says 174.55 GWAC"}], "reason": "wrong figure"}',
+            {"model": "fake", "prompt_tokens": 1, "completion_tokens": 1, "cost_inr": 0},
+        )
+
+    verdict, _ = agents.critique(
+        "summary", {"summary": "Capacity reached 974.55 GW."}, SOURCE, call=critic
+    )
+    assert len(verdict["defects"]) == 1
+    assert "does not appear" not in verdict["defects"][0]
+    assert verdict["score"] == 2  # the cap still applies
+
+
+def test_a_figure_the_critic_missed_is_added(monkeypatch):
+    monkeypatch.setattr(config, "GROUNDING_CHECK", True)
+
+    def critic(messages, **kwargs):
+        return (
+            '{"score": 5, "verdict": "pass", "defects": [], "reason": "fine"}',
+            {"model": "fake", "prompt_tokens": 1, "completion_tokens": 1, "cost_inr": 0},
+        )
+
+    verdict, _ = agents.critique(
+        "summary", {"summary": "Capacity reached 974.55 GW."}, SOURCE, call=critic
+    )
+    assert len(verdict["defects"]) == 1
+    assert "does not appear" in verdict["defects"][0]

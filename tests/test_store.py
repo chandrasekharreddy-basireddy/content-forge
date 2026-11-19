@@ -140,3 +140,22 @@ def test_a_dead_supabase_does_not_lose_the_run(temp_db, monkeypatch):
     monkeypatch.setattr(store.requests, "post", explode)
     assert store.save_run(sample_record(), db_path=temp_db) is True
     assert store.get_run("abc123", db_path=temp_db) is not None
+
+
+def test_configured_paths_are_always_absolute(monkeypatch):
+    """A relative OUTPUT_DIR in .env must not break a run from another folder."""
+    from pipeline import config
+
+    monkeypatch.setenv("OUTPUT_DIR", "outputs")
+    monkeypatch.setenv("DB_PATH", "data/runs.db")
+    assert config._path("OUTPUT_DIR", "unused").is_absolute()
+    assert config._path("DB_PATH", "unused").is_absolute()
+    assert config._path("OUTPUT_DIR", "unused") == config.ROOT / "outputs"
+
+
+def test_the_cli_paths_can_be_printed_relative_to_the_project():
+    """The crash a Windows run hit: relative_to() on a relative path."""
+    from pipeline import config
+
+    assert config.OUTPUT_DIR.is_relative_to(config.ROOT)
+    assert config.DB_PATH.is_relative_to(config.ROOT)

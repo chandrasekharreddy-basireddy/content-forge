@@ -17,6 +17,19 @@ ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
 
+def _path(name: str, default: str) -> Path:
+    """Read a path from the environment, always returning an absolute one.
+
+    .env ships with OUTPUT_DIR=outputs, which is relative. A relative path
+    breaks the moment the working directory is not the project root - on
+    Windows it crashed the CLI outright - so relative values are resolved
+    against the project root here, once, rather than at every use.
+    """
+    raw = os.getenv(name) or default
+    path = Path(raw).expanduser()
+    return path if path.is_absolute() else ROOT / path
+
+
 def _num(name: str, default: float) -> float:
     """Read a number from the environment, falling back to a default."""
     raw = os.getenv(name)
@@ -69,8 +82,8 @@ TRANSLATE_CHUNK = int(_num("TRANSLATE_CHUNK_CHARS", 900))
 
 # --- Storage ----------------------------------------------------------------
 
-DB_PATH = Path(os.getenv("DB_PATH", str(ROOT / "data" / "runs.db")))
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", str(ROOT / "outputs")))
+DB_PATH = _path("DB_PATH", str(ROOT / "data" / "runs.db"))
+OUTPUT_DIR = _path("OUTPUT_DIR", str(ROOT / "outputs"))
 
 # Optional. If both are set, every run is also pushed to Supabase.
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")

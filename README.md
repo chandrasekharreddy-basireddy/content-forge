@@ -109,9 +109,18 @@ Check the model id before anything else — ids change, and an unknown one retur
 a 404:
 
 ```bash
-set -a; . ./.env; set +a     # load .env into this shell first
+# Bash / macOS / Linux
+set -a; . ./.env; set +a
 curl -H "api-subscription-key: $SARVAM_API_KEY" https://api.sarvam.ai/v2/models
 ```
+
+```powershell
+# Windows PowerShell - and this works everywhere, because it is our own client
+python -c "from pipeline import llm; print(chr(10).join(llm.list_models()))"
+```
+
+On Windows, `curl` is an alias for `Invoke-WebRequest` and `set -a` is not a
+thing, so use the Python one-liner. It prints the ids your key can use.
 
 Then, three ways to use it:
 

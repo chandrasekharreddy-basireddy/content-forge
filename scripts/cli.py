@@ -107,7 +107,7 @@ def main() -> int:
     if args.no_write:
         print("\n--no-write: no export files were written")
     else:
-        print(f"\n{len(written)} files written to {config.OUTPUT_DIR.relative_to(ROOT)}/")
+        print(f"\n{len(written)} files written to {config.OUTPUT_DIR}/")
     print(f"cost: ₹{result['usage']['cost_inr']:.4f} "
           f"({result['usage']['prompt_tokens']} in, "
           f"{result['usage']['completion_tokens']} out), "

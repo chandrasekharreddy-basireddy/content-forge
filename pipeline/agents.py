@@ -298,6 +298,15 @@ def critique(
         # The cap applies whenever an unsourced number exists, whether or not
         # the critic named it: who reported the problem must not change the
         # score, only the wording.
+        # Shape rules a model can see but often ignores: a 320-word summary
+        # passed at 4/5 in a measured run.
+        shape = checks.length_defects(output, draft)
+        if shape:
+            defects = shape + defects
+            if score > 3:
+                score = 3
+            verdict = "revise"
+
         missing = checks.unsourced_numbers(draft, source)
         if missing:
             defects = checks.grounding_defects(draft, source, existing=defects) + defects

@@ -87,6 +87,53 @@ def grounding_defects(draft, source: str, existing: list[str] | None = None) -> 
     return [defect_line(fresh)] if fresh else []
 
 
+# The writer is asked for 120-180 words of summary. A measured run produced
+# 320 words of numeric dump and the critic passed it at 4/5, so the range is
+# checked here rather than trusted.
+SUMMARY_WORDS = (80, 220)
+
+
+def length_defects(output: str, draft) -> list[str]:
+    """Deterministic shape complaints that do not need a model to see."""
+    if not isinstance(draft, dict):
+        return []
+
+    defects: list[str] = []
+
+    if output == "summary":
+        prose = str(draft.get("summary", ""))
+        words = len(prose.split())
+        low, high = SUMMARY_WORDS
+        if words > high:
+            defects.append(
+                f"the summary is {words} words; it was asked for 120-180, and "
+                f"anything over {high} is a dump rather than a summary"
+            )
+        elif words and words < low:
+            defects.append(f"the summary is {words} words, too short to be useful")
+
+        bullets = draft.get("bullets")
+        if isinstance(bullets, list) and len(bullets) > 8:
+            defects.append(
+                f"there are {len(bullets)} bullets; five to seven is a summary, "
+                "more is a transcript"
+            )
+
+    elif output == "quiz":
+        questions = draft.get("questions")
+        if isinstance(questions, list) and len(questions) > 10:
+            defects.append(
+                f"there are {len(questions)} questions; eight is the deep setting"
+            )
+
+    elif output == "flashcards":
+        cards = draft.get("cards")
+        if isinstance(cards, list) and len(cards) > 14:
+            defects.append(f"there are {len(cards)} cards; twelve is the deep setting")
+
+    return defects
+
+
 def summarise_for_trace(draft) -> str:
     """A short fingerprint of a draft, for a log line that stays readable."""
     return json.dumps(text_of(draft))[:120]

@@ -364,6 +364,12 @@ page, and the Power BI page. Four images, captioned.]
   handing it to students.
 - **Scanned PDFs are refused.** No OCR; the app says so rather than producing
   nonsense.
+- **Dashboard and table exports are outside what it handles.** A Power BI PDF
+  of figures has no sentences to extract: the extractor returned no facts, the
+  writer produced a numeric dump, and the run ended `partial` with the summary
+  flagged. The pipeline was right to refuse to pass it — but the honest
+  statement is that this document type is out of scope, not that it nearly
+  worked. Prose is what the extractor needs.
 - **Documents leave the machine.** Anything uploaded is sent to a third-party
   API. The app caps upload size and file types, but cannot judge whether the
   user had the right to send a document.
